@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MicroNet.Network
+{
+    public sealed class NetConfiguration
+    {
+
+        /// <summary>
+        /// Max connections allowed
+        /// </summary>
+        public int MaxConnections = 12;
+
+        /// <summary>
+        /// Name of the connection owner
+        /// </summary>
+        public string Name = "";
+
+        /// <summary>
+        /// Port
+        /// </summary>
+        public ushort Port = 9999;
+
+        /// <summary>
+        /// The name of the application which should connect
+        /// </summary>
+        public uint AppIdentification;
+
+        /// <summary>
+        /// Number of milliseconds that ENet waits for events. Defaults to 1.
+        /// </summary>
+        public uint Timeout = 1;
+
+        /// <summary>
+        /// Downstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited bandwidth.
+        /// </summary>
+        public uint IncomingBandwidth = 0;
+
+        /// <summary>
+        /// Upstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited bandwidth.
+        /// </summary>
+        public uint OutgoingBandwidth = 0;
+
+
+        /// <summary>
+        /// Allow others to connect. For example, set true if hosting.
+        /// </summary>
+        public bool AllowConnectors = false;
+
+        /// <summary>
+        /// The local address of the network device in bytes.
+        /// </summary>
+        public byte[] LocalAddress;
+
+
+
+        public NetConfiguration(uint appIdentification)
+        {
+            AppIdentification = appIdentification;
+            LocalAddress = IPAddress.Loopback.GetAddressBytes();
+        }
+
+    }
+}
