@@ -10,11 +10,11 @@ namespace MicroNet.Network
     {
         public ENet.ENetPacket* Packet;
         public DeliveryMethod DeliveryMethod;
-        internal byte[] Data;
+        internal byte[] Data = new byte[2];
 
 
         internal int BitLocation = 0;
-        internal int ByteLength = 0;
+        internal int BitLength = 0;
 
         public void Dispose()
         {
@@ -23,10 +23,6 @@ namespace MicroNet.Network
             ENet.DestroyPacket(Packet);
         }
 
-        public void EnsureBufferSize(int bitCount)
-        {
-            
-        }
 
     }
 }
