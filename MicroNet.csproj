@@ -47,6 +47,8 @@
     <Compile Include="Network\Debug.cs" />
     <Compile Include="Network\ENet\ENet.cs" />
     <Compile Include="Network\ENet\ENet.Types.cs" />
+    <Compile Include="Network\IncomingMessage.Read.cs" />
+    <Compile Include="Network\OutgoingMessage.Write.cs" />
     <Compile Include="Network\IncomingMessage.cs" />
     <Compile Include="Network\Message.cs" />
     <Compile Include="Network\MessageType.cs" />
