@@ -15,13 +15,6 @@ namespace MicroNet.Network
             this.ENetPeer = peer;
         }
         
-
-        public ENet.ENetPeer* NativeData
-        {
-            get { return ENetPeer; }
-            set { ENetPeer = value; }
-        }
-
         public void Disconnect(uint data)
         {
             ENet.DisconnectPeer(ENetPeer, data);
