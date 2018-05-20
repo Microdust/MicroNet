@@ -33,11 +33,8 @@ namespace MicroNet
             while (isPooling)
             {
                 while ((msg = host.Service()) != null)
-                {
-                    Debug.Log("Client received: ", msg.ReadString());
+                { 
                 }
-
-                
             }
 
         }
@@ -53,29 +50,27 @@ namespace MicroNet
             });
 
             host.Initialize();
-
             IncomingMessage msg;
-            OutgoingMessage outgoing = new OutgoingMessage();
-            outgoing.DeliveryMethod = DeliveryMethod.None;
-            outgoing.Write("I must have called a thousand times...");        
+      
 
             while (isPooling)
             {
                 while ((msg = host.Service()) != null)
                 {
-                    Debug.Log("Server received: ", msg.ReadString());
+                    Debug.Log(msg.ReadBool().ToString());
+                    Debug.Log(msg.ReadBool().ToString());
+                    Debug.Log(msg.ReadBool().ToString());
                 }
             }
                 
     }
-            
+
 
         public static void Main(string[] args)
         {
             Debug.Log("Initializing ENet...");
 
             ENet.Initialize();
-            
 
             var server = new Thread(Server);
             server.Start();
@@ -85,9 +80,7 @@ namespace MicroNet
 
             server.Join();
             client.Join();
-
-            Console.ReadKey();
         }
-
+            
     }
 }

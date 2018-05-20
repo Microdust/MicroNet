@@ -113,10 +113,12 @@ namespace MicroNet.Network
                     case MessageType.Connect:
                     {
                         Debug.Log(config.Name, " Connected");
-                        hashConnections.Add(new Peer(evt.peer));
+                    //    hashConnections.Add(new Peer(evt.peer));
 
                         OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None);
-                        outgoing.Write("Oh damn it");
+                            outgoing.WriteBool(true);
+                            outgoing.WriteBool(true);
+                            outgoing.WriteBool(false);
 
                         ENet.SendPeer(evt.peer, 0, outgoing.GetPacket());
 
@@ -132,6 +134,7 @@ namespace MicroNet.Network
                     {
                         Debug.Log(config.Name, " Received data");
                         msg.Initialize(evt);
+
                         return msg;
                     }
 
