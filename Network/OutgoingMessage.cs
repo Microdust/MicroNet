@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public unsafe class OutgoingMessage : Message
+    public unsafe partial class OutgoingMessage : Message
     {
 
         public OutgoingMessage(DeliveryMethod deliveryMethod)
@@ -21,10 +21,11 @@ namespace MicroNet.Network
         public void Write(string data)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(data);
-            ByteLength =+ bytes.Length;
+            BitLength =+ bytes.Length;
 
             Data = bytes;
         }
+
 
         public ENet.ENetPacket* GetPacket()
         {
@@ -34,6 +35,9 @@ namespace MicroNet.Network
                 return Packet = ENet.CreatePacket(bytes, (IntPtr)Data.Length, DeliveryMethod);
             }               
         }
+
+
+
 
     }
 }

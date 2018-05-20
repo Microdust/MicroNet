@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public unsafe class IncomingMessage : Message
+    public unsafe partial class IncomingMessage : Message
     {
 
         public void Initialize(ENet.ENetEvent evt)
         {
-            this.Packet = evt.packet; 
+            this.Packet = evt.packet;
+
+            IntPtr srcPtr = (IntPtr)((byte*)Packet->data + 0);
+            Marshal.Copy(srcPtr, Data, 0, (int)Packet->dataLength);
         }
 
         public byte[] GetBytes()
@@ -23,11 +26,6 @@ namespace MicroNet.Network
             Marshal.Copy(srcPtr, bytes, 0, length);
 
             return bytes;
-        }
-
-        public string ReadString()
-        {
-            return Encoding.UTF8.GetString(GetBytes());
         }
 
     }
