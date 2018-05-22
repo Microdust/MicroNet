@@ -10,7 +10,7 @@ namespace MicroNet.Network
     {
         public ENet.ENetPacket* Packet;
         public DeliveryMethod DeliveryMethod;
-        internal byte[] Data = new byte[2];
+        internal byte[] Data = new byte[4];
 
 
         internal int BitLocation = 0;

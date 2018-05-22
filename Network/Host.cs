@@ -116,11 +116,14 @@ namespace MicroNet.Network
                     //    hashConnections.Add(new Peer(evt.peer));
 
                         OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None);
-                            outgoing.WriteBool(true);
-                            outgoing.WriteBool(true);
+                            outgoing.WriteByte(200);
                             outgoing.WriteBool(false);
 
-                        ENet.SendPeer(evt.peer, 0, outgoing.GetPacket());
+                            outgoing.WriteBool(true);
+                            outgoing.WriteByte(123);
+                            outgoing.WriteByte(55);
+
+                            ENet.SendPeer(evt.peer, 0, outgoing.GetPacket());
 
                         break;
                     }

@@ -57,9 +57,18 @@ namespace MicroNet
             {
                 while ((msg = host.Service()) != null)
                 {
+                    Debug.Log(msg.ReadByte().ToString());
+                    Debug.Log(msg.ReadBool().ToString());                 
+                    Debug.Log(msg.ReadBool().ToString());
+                    Debug.Log(msg.ReadByte().ToString());
+                    Debug.Log(msg.ReadByte().ToString());
+                 /*
+                    Debug.Log(msg.ReadByteLid().ToString());
                     Debug.Log(msg.ReadBool().ToString());
                     Debug.Log(msg.ReadBool().ToString());
-                    Debug.Log(msg.ReadBool().ToString());
+                    Debug.Log(msg.ReadByteLid().ToString());
+                    Debug.Log(msg.ReadByteLid().ToString());
+                    */
                 }
             }
                 
