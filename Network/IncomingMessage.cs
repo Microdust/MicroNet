@@ -13,6 +13,8 @@ namespace MicroNet.Network
         public void Initialize(ENet.ENetEvent evt)
         {
             this.Packet = evt.packet;
+            BitLocation = 0;
+            BitLength = 0;
 
             IntPtr srcPtr = (IntPtr)((byte*)Packet->data + 0);
             Marshal.Copy(srcPtr, Data, 0, (int)Packet->dataLength);

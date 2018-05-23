@@ -12,19 +12,17 @@ namespace MicroNet.Network
         private ENet.ENetHost* ENetHost;
         private NetConfiguration config;
 
-        public ENet.ENetPeer*[] Connections;
-
         private IncomingMessage msg = new IncomingMessage();
         private IncomingMessage nullMessage;
 
         private ENet.ENetEvent evt;
 
-        HashSet<Peer> hashConnections = new HashSet<Peer>();
+        private ConnectionManager connectionManager = new ConnectionManager(8);
+
 
         public Host(NetConfiguration configuration)
         {
             this.config = configuration;
-            this.Connections = new ENet.ENetPeer*[config.MaxConnections];
         }
 
         public void Initialize()
@@ -64,18 +62,8 @@ namespace MicroNet.Network
             Debug.Log("Attempting to connect to: ", address, ":", port.ToString());
             ENet.AddressSetHost(ref ENetAddress, Encoding.ASCII.GetBytes(address));
 
-            Peer connection = new Peer(ENet.ConnectHost(ENetHost, ref ENetAddress, (IntPtr)config.MaxConnections, config.AppIdentification));
-     
-
-            if (connection.ENetPeer != null)
-            {
-                hashConnections.Add(connection);
-            }
-            else
-            {
-                Debug.Error(this.ToString(), " Failed to connect");
-            }
-         
+            ENet.ConnectHost(ENetHost, ref ENetAddress, (IntPtr)config.MaxConnections, config.AppIdentification);
+              
         }
 
         /// <summary>Sends any queued packets on the host specified to its designated peers. </summary>
@@ -113,9 +101,9 @@ namespace MicroNet.Network
                     case MessageType.Connect:
                     {
                         Debug.Log(config.Name, " Connected");
-                    //    hashConnections.Add(new Peer(evt.peer));
+                            connectionManager.OnConnect(evt.peer);
 
-                        OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None);
+                            OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None);
                             outgoing.WriteByte(200);
                             outgoing.WriteBool(false);
 
@@ -123,22 +111,32 @@ namespace MicroNet.Network
                             outgoing.WriteByte(123);
                             outgoing.WriteByte(55);
 
-                            ENet.SendPeer(evt.peer, 0, outgoing.GetPacket());
 
+                            connectionManager.Send(0, outgoing);
+                            
                         break;
                     }
                     case MessageType.Disconnect:
                     {
                     
                         Debug.Log(config.Name, " Disconnected");
-                        break;
+                            connectionManager.OnDisconnect(evt.peer);
+                            Connect("127.0.0.1", 8080);
+                            break;
                     }
                     case MessageType.Receive:
                     {
                         Debug.Log(config.Name, " Received data");
                         msg.Initialize(evt);
+                            connectionManager.Ping(0);
+                            connectionManager.Ping(0);
+                            connectionManager.Ping(0);
 
-                        return msg;
+                            connectionManager.DisconnectAll();
+
+                            
+
+                            return msg;
                     }
 
                 }
