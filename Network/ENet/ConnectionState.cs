@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public enum PeerState
+    public enum ConnectionState
     {
         Uninitialized = -1,
         Disconnected = 0,

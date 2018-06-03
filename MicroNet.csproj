@@ -61,8 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Network\Address.cs" />
-    <Compile Include="Network\ConnectionManager.cs" />
+    <Compile Include="Network\LocalHost.cs" />
+    <Compile Include="Network\NetUtilities.cs" />
+    <Compile Include="Network\NetworkManager.MessageQueues.cs" />
+    <Compile Include="Network\NetworkManager.Pools.cs" />
+    <Compile Include="Network\OutgoingQueue.cs" />
+    <Compile Include="Network\RemoteConnection.cs" />
     <Compile Include="Network\Debug.cs" />
     <Compile Include="Network\ENet\ENet.cs" />
     <Compile Include="Network\ENet\ENet.Types.cs" />
@@ -70,12 +74,13 @@
     <Compile Include="Network\OutgoingMessage.Write.cs" />
     <Compile Include="Network\IncomingMessage.cs" />
     <Compile Include="Network\Message.cs" />
-    <Compile Include="Network\MessageType.cs" />
+    <Compile Include="Network\EventMessage.cs" />
     <Compile Include="Network\NetConfiguration.cs" />
     <Compile Include="Network\OutgoingMessage.cs" />
-    <Compile Include="Network\Host.cs" />
+    <Compile Include="Network\NetworkManager.cs" />
     <Compile Include="Network\ENet\DeliveryMethod.cs" />
-    <Compile Include="Network\ENet\PeerState.cs" />
+    <Compile Include="Network\ENet\ConnectionState.cs" />
+    <Compile Include="Network\Types.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -84,11 +89,6 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ENet.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
@@ -101,6 +101,11 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ENet.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

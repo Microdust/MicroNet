@@ -6,21 +6,20 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public abstract unsafe class Message : IDisposable
+    public abstract unsafe class Message
     {
-        public ENet.ENetPacket* Packet;
-        public DeliveryMethod DeliveryMethod;
-        internal byte[] Data = new byte[4];
+        internal NetSingle Single = new NetSingle();
 
+        internal ENet.Packet* Packet;
+        public DeliveryMethod DeliveryMethod;
+        internal byte[] Data;
 
         internal int BitLocation = 0;
         internal int BitLength = 0;
 
-        public void Dispose()
+        public Message(int byteSize)
         {
-            Packet = null;
-            Data = null;
-            ENet.DestroyPacket(Packet);
+            Data = new byte[byteSize];
         }
 
 

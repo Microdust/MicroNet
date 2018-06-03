@@ -10,19 +10,19 @@ namespace MicroNet.Network
     public static unsafe partial class ENet
     {
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetAddress
+        public struct Address
         {
             public uint Host;
             public ushort Port;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetHost
+        public struct Host
         {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetChannel
+        public struct Channel
         {
             public ushort outgoingReliableSequenceNumber;
             public ushort outgoingUnreliableSequenceNumber;
@@ -34,7 +34,7 @@ namespace MicroNet.Network
             public ENetList* incomingUnreliableCommands;
         }
 
-        public struct ENetCompressor
+        public struct Compressor
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void compress_cb(IntPtr context, IntPtr inBuffers, IntPtr inBufferCount, IntPtr inLimit, IntPtr outData, IntPtr outLimit);
@@ -50,20 +50,20 @@ namespace MicroNet.Network
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetEvent
+        public struct Event
         {
-            public MessageType type;
-            public ENetPeer* peer;
+            public EventMessage type;
+            public Peer* peer;
             public byte channelID;
             public uint data;
-            public ENetPacket* packet;
+            public Packet* packet;
         }
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetListNode
+        public struct ListNode
         {
-            public ENetListNode* next, previous;
+            public ListNode* next, previous;
         }
 
 
@@ -71,11 +71,11 @@ namespace MicroNet.Network
         [StructLayout(LayoutKind.Sequential)]
         public struct ENetList
         {
-            public ENetListNode* sentinel;
+            public ListNode* sentinel;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetPacket
+        public struct Packet
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void freeCallback_cb(IntPtr* packet);
@@ -89,7 +89,7 @@ namespace MicroNet.Network
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetCallbacks
+        public struct Callbacks
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate IntPtr malloc_cb(IntPtr size);
@@ -104,19 +104,19 @@ namespace MicroNet.Network
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetPeer
+        public struct Peer
         {
-            public ENetListNode dispatchList;
-            public ENetHost* host;
+            public ListNode dispatchList;
+            public Host* host;
             public ushort outgoingPeerID;
             public ushort incomingPeerID;
             public uint connectID;
             public byte outgoingSessionID;
             public byte incomingSessionID;
-            public ENetAddress address;
+            public Address address;
             public IntPtr data;
-            public PeerState state;
-            public ENetChannel* channels;
+            public ConnectionState state;
+            public Channel* channels;
             public IntPtr channelcount;
             public uint incomingBandwidth;
             public uint outgoingBandwidth;

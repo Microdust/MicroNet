@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -13,83 +14,78 @@ namespace MicroNet
     public unsafe class Program
     {
         private static bool isPooling = true;
-
         private static void Client()
         {
-
-            Host host = new Host(new NetConfiguration(5001)
+            LocalHost host = new LocalHost(new NetConfiguration(5001)
             {
                 Port = 8080,
                 AllowConnectors = false,
                 MaxConnections = 5,
-                Name = "Client",               
+                Name = "Client",
+                Timeout = 1,
+                NetworkRate = 20
             });
 
-            host.Initialize();
-            host.Connect("127.0.0.1", 8080);
+            host.Start();
 
-            IncomingMessage msg;
 
             while (isPooling)
             {
-                while ((msg = host.Service()) != null)
-                { 
-                }
+                host.Tick();
+                Thread.Sleep(50);
             }
 
+        
         }
+
 
         private static void Server()
         {
-            Host host = new Host(new NetConfiguration(5001)
+            LocalHost host = new LocalHost(new NetConfiguration(5001)
             {
                 Port = 8080,
                 AllowConnectors = true,
                 MaxConnections = 5,
-                Name = "Server",                
+                Name = "Server",
+                Timeout = 1,
+                NetworkRate = 20
             });
 
-            host.Initialize();
-            IncomingMessage msg;
-      
+
+            host.Start();
 
             while (isPooling)
             {
-                while ((msg = host.Service()) != null)
-                {
-                    Debug.Log(msg.ReadByte().ToString());
-                    Debug.Log(msg.ReadBool().ToString());                 
-                    Debug.Log(msg.ReadBool().ToString());
-                    Debug.Log(msg.ReadByte().ToString());
-                    Debug.Log(msg.ReadByte().ToString());
-                 /*
-                    Debug.Log(msg.ReadByteLid().ToString());
-                    Debug.Log(msg.ReadBool().ToString());
-                    Debug.Log(msg.ReadBool().ToString());
-                    Debug.Log(msg.ReadByteLid().ToString());
-                    Debug.Log(msg.ReadByteLid().ToString());
-                    */
-                }
+                host.Tick();
+                Thread.Sleep(50);
             }
-                
-    }
+        }
 
 
         public static void Main(string[] args)
         {
-            Debug.Log("Initializing ENet...");
+            Stopwatch watch = new Stopwatch();
 
-            ENet.Initialize();
-
+            Thread[] clients = new Thread[1];
             var server = new Thread(Server);
             server.Start();
-            Thread.Sleep(250);
-            var client = new Thread(Client);
-            client.Start();
+            Thread.Sleep(100);
 
-            server.Join();
-            client.Join();
+            for (int i = 0; i < clients.Length; i++)
+            {
+                clients[i] = new Thread(Client);
+                clients[i].Start();
+            }
+
+            server.Join();     
+
+
         }
-            
+
+        public static void Test(float f)
+        {
+
+        }
+
     }
 }

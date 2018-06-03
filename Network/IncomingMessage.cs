@@ -9,26 +9,56 @@ namespace MicroNet.Network
 {
     public unsafe partial class IncomingMessage : Message
     {
+        public uint Type;
+        public EventMessage Event;
+        public RemoteConnection Remote = new RemoteConnection();
 
-        public void Initialize(ENet.ENetEvent evt)
+        public IncomingMessage(int byteSize) : base(byteSize) { }
+
+        internal void Initialize(ENet.Event evt)
         {
-            this.Packet = evt.packet;
-            BitLocation = 0;
-            BitLength = 0;
+            Type = evt.data;
+            Event = evt.type;
+            Remote.Peer = evt.peer;
 
-            IntPtr srcPtr = (IntPtr)((byte*)Packet->data + 0);
-            Marshal.Copy(srcPtr, Data, 0, (int)Packet->dataLength);
+            int length = (int)evt.packet->dataLength;
+
+            if (length > Data.Length)
+            {
+                Debug.Log("Incoming Message array was too big, had to resize");
+                Data = new byte[length];
+            }
+
+           
+            Marshal.Copy(evt.packet->data, Data, 0, length);
         }
 
+        internal void InitalizeEvent(ENet.Event evt)
+        {
+            Type = evt.data;
+            Event = evt.type;
+
+            Remote.Peer = evt.peer;
+        }
+
+        internal void Reset()
+        {
+            Type = 0;
+            BitLocation = 0;
+            BitLength = 0;
+        }
+
+        /*
         public byte[] GetBytes()
         {
             int length = (int)Packet->dataLength;
             byte[] bytes = new byte[length];
-            IntPtr srcPtr = (IntPtr)((byte*)Packet->data + 0);
-            Marshal.Copy(srcPtr, bytes, 0, length);
+
+            Marshal.Copy(Packet->data, bytes, 0, length);
 
             return bytes;
         }
-
+        */
+        
     }
 }

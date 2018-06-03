@@ -36,12 +36,12 @@ namespace MicroNet.Network
         public uint Timeout = 1;
 
         /// <summary>
-        /// Downstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited bandwidth.
+        /// Downstream bandwidth of the host in bytes/second; if 0 = unlimited bandwidth.
         /// </summary>
         public uint IncomingBandwidth = 0;
 
         /// <summary>
-        /// Upstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited bandwidth.
+        /// Upstream bandwidth of the host in bytes/second; if 0 = unlimited bandwidth.
         /// </summary>
         public uint OutgoingBandwidth = 0;
 
@@ -55,6 +55,16 @@ namespace MicroNet.Network
         /// The local address of the network device in bytes.
         /// </summary>
         public byte[] LocalAddress;
+
+        /// <summary>
+        /// How often the network thread should attempt to update per second. 
+        /// </summary>
+        public int NetworkRate = 50;
+
+        /// <summary>
+        /// The minimum size of a sent byte. If the buffer size exceeds 16 bytes it will resize the array which is performance-heavy.
+        /// </summary>
+        public int MinimumByteSize = 32;
 
 
 

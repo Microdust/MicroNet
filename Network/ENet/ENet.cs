@@ -22,6 +22,8 @@ namespace MicroNet.Network
         public const uint HOST_ANY = 0;
         public const uint HOST_BROADCAST = 0xffffffff;
 
+        [DllImport("Kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
+        public static extern void MoveMemory(byte[] dest, IntPtr src, int size);
 
         #region ENet Eseentials
 
@@ -32,68 +34,68 @@ namespace MicroNet.Network
         public static extern void Deinitialize();
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_initialize_with_callbacks")]
-        public static extern int InitializeWithCallback(uint version, ref ENetCallbacks inits);
+        public static extern int InitializeWithCallback(uint version, ref Callbacks inits);
         #endregion
         #region Address
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_set_host")]
-        public static extern int AddressSetHost(ref ENetAddress address, byte* hostName);
+        public static extern int AddressSetHost(ref Address address, byte* hostName);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_set_host")]
-        public static extern int AddressSetHost(ref ENetAddress address, byte[] hostName);
+        public static extern int AddressSetHost(ref Address address, byte[] hostName);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_get_host")]
-        public static extern int AddressGetHost(ref ENetAddress address, byte* hostName, IntPtr nameLength);
+        public static extern int AddressGetHost(ref Address address, byte* hostName, IntPtr nameLength);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_get_host")]
-        public static extern int AddressGetHost(ref ENetAddress address, byte[] hostName, IntPtr nameLength);
+        public static extern int AddressGetHost(ref Address address, byte[] hostName, IntPtr nameLength);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_get_host_ip")]
-        public static extern int AddressGetHostIp(ref ENetAddress address, byte* hostIP, IntPtr ipLength);
+        public static extern int AddressGetHostIp(ref Address address, byte* hostIP, IntPtr ipLength);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_address_get_host_ip")]
-        public static extern int AddressGetHostIp(ref ENetAddress address, byte[] hostIP, IntPtr ipLength);
+        public static extern int AddressGetHostIp(ref Address address, byte[] hostIP, IntPtr ipLength);
         #endregion
         #region Hosting
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_compress_with_range_coder")]
-        public static extern int HostCompressRange(ENetHost* host);
+        public static extern int HostCompressRange(Host* host);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_create")]
-        public static extern ENetHost* CreateHost(ENetAddress* address,
+        public static extern Host* CreateHost(Address* address,
                                                         IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_create")]
-        public static extern ENetHost* CreateHost(ref ENetAddress address,
+        public static extern Host* CreateHost(ref Address address,
                                                         IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_destroy")]
-        public static extern void DestroyHost(ENetHost* host);
+        public static extern void DestroyHost(Host* host);
  
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_connect")]
-        public static extern ENetPeer* ConnectHost(ENetHost* host, ref ENetAddress address, IntPtr channelCount, uint data);
+        public static extern Peer* Connect(Host* host, ref Address address, IntPtr channelCount, uint data);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_broadcast")]
-        public static extern void BroadcastHost(ENetHost* host, byte channelID, ENetPacket* packet);
+        public static extern void Broadcast(Host* host, byte channelID, Packet* packet);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_compress")]
-        public static extern void CompressHost(ENetHost* host, ENetCompressor* compressor);
+        public static extern void CompressHost(Host* host, Compressor* compressor);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_channel_limit")]
-        public static extern void ChannelLimitHost(ENetHost* host, IntPtr channelLimit);
+        public static extern void ChannelLimitHost(Host* host, IntPtr channelLimit);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_bandwidth_limit")]
-        public static extern void BandwidthLimitHost(ENetHost* host, uint incomingBandwidth, uint outgoingBandwidth);
+        public static extern void BandwidthLimitHost(Host* host, uint incomingBandwidth, uint outgoingBandwidth);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_flush")]
-        public static extern void FlushHost(ENetHost* host);
+        public static extern void Flush(Host* host);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_check_events")]
-        public static extern int CheckEventsHost(ENetHost* host, out ENetEvent @event);
+        public static extern int CheckEventsHost(Host* host, out Event @event);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_service")]
-        public static extern int ServiceHost(ENetHost* host, ENetEvent* @event, uint timeout);
+        public static extern int Service(Host* host, Event* @event, uint timeout);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_service")]
-        public static extern int ServiceHost(ENetHost* host, out ENetEvent @event, uint timeout);
+        public static extern int Service(Host* host, out Event @event, uint timeout);
 
         #endregion
         #region Utility
@@ -108,40 +110,40 @@ namespace MicroNet.Network
         #region Packet
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_packet_create")]
-        public static extern ENetPacket* CreatePacket(void* data, IntPtr dataLength, DeliveryMethod flags);
+        public static extern Packet* CreatePacket(void* data, IntPtr dataLength, DeliveryMethod flags);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_packet_destroy")]
-        public static extern void DestroyPacket(ENetPacket* packet);
+        public static extern void DestroyPacket(Packet* packet);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_packet_resize")]
-        public static extern int ResizePacket(ENetPacket* packet, IntPtr dataLength);
+        public static extern int ResizePacket(Packet* packet, IntPtr dataLength);
 
         #endregion
         #region Peer
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_throttle_configure")]
-        public static extern void ThrottleConfigurePeer(ENetPeer* peer, uint interval, uint acceleration, uint deceleration);
+        public static extern void ThrottleConfigurePeer(Peer* peer, uint interval, uint acceleration, uint deceleration);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_send")]
-        public static extern int SendPeer(ENetPeer* peer, byte channelID, ENetPacket* packet);
+        public static extern int SendPeer(Peer* peer, byte channelID, Packet* packet);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_receive")]
-        public static extern ENetPacket* ReceivePeer(ENetPeer* peer, out byte channelID);
+        public static extern Packet* ReceivePeer(Peer* peer, out byte channelID);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_reset")]
-        public static extern void ResetPeer(ENetPeer* peer);
+        public static extern void ResetPeer(Peer* peer);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_ping")]
-        public static extern void PingPeer(ENetPeer* peer);
+        public static extern void PingPeer(Peer* peer);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_disconnect_now")]
-        public static extern void DisconnectPeerNow(ENetPeer* peer, uint data);
+        public static extern void DisconnectPeerNow(Peer* peer, uint data);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_disconnect")]
-        public static extern void DisconnectPeer(ENetPeer* peer, uint data);
+        public static extern void DisconnectPeer(Peer* peer, uint data);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_disconnect_later")]
-        public static extern void DisconnectPeerLater(ENetPeer* peer, uint data);
+        public static extern void DisconnectPeerLater(Peer* peer, uint data);
 
         #endregion
 
