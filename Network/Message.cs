@@ -7,10 +7,7 @@ using System.Threading.Tasks;
 namespace MicroNet.Network
 {
     public abstract unsafe class Message
-    {
-        internal NetSingle Single = new NetSingle();
-
-        internal ENet.Packet* Packet;
+    {       
         public DeliveryMethod DeliveryMethod;
         internal byte[] Data;
 
@@ -21,7 +18,5 @@ namespace MicroNet.Network
         {
             Data = new byte[byteSize];
         }
-
-
     }
 }
