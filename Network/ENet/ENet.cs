@@ -22,8 +22,15 @@ namespace MicroNet.Network
         public const uint HOST_ANY = 0;
         public const uint HOST_BROADCAST = 0xffffffff;
 
-        [DllImport("Kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
-        public static extern void MoveMemory(byte[] dest, IntPtr src, int size);
+        #region MicroNET
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "micronet_send")]
+        public static extern void MicroSend(Peer* peer, byte channelId, void* data, IntPtr dataLength, DeliveryMethod flags);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "micronet_broadcast")]
+        public static extern void MicroBroadcast(Host* host, byte channelID, void* data, IntPtr dataLength, DeliveryMethod flags);
+
+        #endregion
 
         #region ENet Eseentials
 
@@ -59,19 +66,21 @@ namespace MicroNet.Network
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_compress_with_range_coder")]
         public static extern int HostCompressRange(Host* host);
 
+
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_create")]
         public static extern Host* CreateHost(Address* address,
-                                                        IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth);
+                                                IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth, uint applicationId);
+
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_create")]
         public static extern Host* CreateHost(ref Address address,
-                                                        IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth);
+                                                        IntPtr peerLimit, IntPtr channelLimit, uint incomingBandwidth, uint outgoingBandwidth, uint applicationId);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_destroy")]
         public static extern void DestroyHost(Host* host);
- 
+
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_connect")]
-        public static extern Peer* Connect(Host* host, ref Address address, IntPtr channelCount, uint data);
+        public static extern Peer* Connect(Host* host, ref Address address, IntPtr channelCount);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_host_broadcast")]
         public static extern void Broadcast(Host* host, byte channelID, Packet* packet);
@@ -121,6 +130,7 @@ namespace MicroNet.Network
         #endregion
         #region Peer
 
+
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "enet_peer_throttle_configure")]
         public static extern void ThrottleConfigurePeer(Peer* peer, uint interval, uint acceleration, uint deceleration);
 
@@ -146,6 +156,8 @@ namespace MicroNet.Network
         public static extern void DisconnectPeerLater(Peer* peer, uint data);
 
         #endregion
+
+ 
 
     }
 }
