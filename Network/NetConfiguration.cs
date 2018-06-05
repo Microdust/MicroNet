@@ -66,6 +66,12 @@ namespace MicroNet.Network
         /// </summary>
         public int MinimumByteSize = 32;
 
+        /// <summary>
+        /// The number of channels to allocate for any default connection
+        /// </summary>
+        public byte DefaultChannelAmount = 4;
+
+
 
 
         public NetConfiguration(uint appIdentification)
