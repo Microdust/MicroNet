@@ -22,9 +22,10 @@ namespace MicroNet.Network
         /// <summary>
         /// Returns the IP address of the remote peer
         /// </summary>
-        public IPAddress IPAddress()
+        public IPAddress IPAddress
         {
-            return new IPAddress(Peer->address.Host);   
+            get { return new IPAddress(Peer->address.Host); }
+
         }
 
         /// <summary>
@@ -39,8 +40,11 @@ namespace MicroNet.Network
         /// Sends a message to a remote connection. Default channel = 0
         /// </summary>
         public void Send(OutgoingMessage msg)
-        {           
-            ENet.SendPeer(Peer, 0, msg.GetPacket());
+        {
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         /// <summary>
@@ -48,7 +52,10 @@ namespace MicroNet.Network
         /// </summary>
         public void Send(OutgoingMessage msg, byte channelId)
         {
-            ENet.SendPeer(Peer, channelId, msg.GetPacket());
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroSend(Peer, channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         ///<summary>

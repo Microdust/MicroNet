@@ -60,11 +60,11 @@ namespace MicroNet.Network
 
 
                 ENet.AddressSetHost(ref address, config.LocalAddress);
-                ENetHost = ENet.CreateHost(ref address, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth);
+                ENetHost = ENet.CreateHost(ref address, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
             }
             else
             {
-                ENetHost = ENet.CreateHost(null, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth);
+                ENetHost = ENet.CreateHost(null, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
 
  
             }
@@ -84,14 +84,30 @@ namespace MicroNet.Network
             isRunning = true;
         }
 
+        /// <summary>
+        /// Request to connect to a remote host at specified address and port.
+        /// </summary>
         public void Connect(string address, ushort port)
         {
-            ENet.Address ENetAddress = new ENet.Address();
-            ENetAddress.Port = port;
+            ENet.Address remoteAddr = new ENet.Address();
+            remoteAddr.Port = port;
+            ENet.AddressSetHost(ref remoteAddr, Encoding.ASCII.GetBytes(address));
 
-            ENet.AddressSetHost(ref ENetAddress, Encoding.ASCII.GetBytes(address));
 
-            ENet.Connect(ENetHost, ref ENetAddress, (IntPtr)5, config.AppIdentification);
+            ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+        }
+
+
+        /// <summary>
+        /// Request to connect to a remote host at specified address and port.
+        /// </summary>
+        public void Connect(System.Net.IPAddress address, ushort port)
+        {
+            ENet.Address remoteAddr = new ENet.Address();
+            remoteAddr.Port = port;
+            ENet.AddressSetHost(ref remoteAddr, address.GetAddressBytes());
+
+            ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
         }
 
 
@@ -100,7 +116,10 @@ namespace MicroNet.Network
         /// </summary>
         public void Broadcast(OutgoingMessage msg, byte channelId)
         {
-            ENet.Broadcast(ENetHost, channelId, msg.GetPacket());          
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroBroadcast(ENetHost, channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         /// <summary>
@@ -108,7 +127,10 @@ namespace MicroNet.Network
         /// </summary>
         public void Broadcast(OutgoingMessage msg)
         {
-            ENet.Broadcast(ENetHost, 0, msg.GetPacket());
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroBroadcast(ENetHost, 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         /// <summary>
@@ -116,7 +138,10 @@ namespace MicroNet.Network
         /// </summary>
         public void Send(OutgoingMessage msg, uint connectionId, byte channelId)
         {
-            ENet.SendPeer(connections[connectionId], channelId, msg.GetPacket());
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroSend(connections[connectionId], channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         /// <summary>
@@ -124,8 +149,10 @@ namespace MicroNet.Network
         /// </summary>
         public void Send(OutgoingMessage msg, uint connectionId)
         {
-            ENet.SendPeer(connections[connectionId], 0, msg.GetPacket());
-            
+            fixed (byte* bytes = msg.Data)
+            {
+                ENet.MicroSend(connections[connectionId], 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+            }
         }
 
         public void Disconnect(uint connectionId, uint flag)
@@ -201,6 +228,8 @@ namespace MicroNet.Network
             Initialize();
             ENet.Event evt;
             IncomingMessage internalMsg;
+
+            
         
             while (isRunning)
             {
