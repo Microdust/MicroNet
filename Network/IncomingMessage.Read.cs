@@ -184,8 +184,8 @@ namespace MicroNet.Network
 				((returnValue & 0x000000ff) << 24);
 #else
 
-            Single.Integer = integer;
-            return Single.Value;
+            NetUtilities.Single.Integer = integer;
+            return NetUtilities.Single.Value;
 #endif
         }
 

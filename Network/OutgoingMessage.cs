@@ -11,7 +11,6 @@ namespace MicroNet.Network
     {
         private byte[] emptyData = new byte[16];
 
-
         public OutgoingMessage(DeliveryMethod deliveryMethod, int byteSize) : base(byteSize)
         {
             DeliveryMethod = deliveryMethod;
@@ -23,23 +22,20 @@ namespace MicroNet.Network
         public OutgoingMessage(int byteSize) : base(byteSize)
         {
         }
-
-
-        public ENet.Packet* GetPacket()
+        /*
+        public ENet.Packet* Packet
         {
-
-            fixed (byte* bytes = Data)
+            get
             {
-                Packet = ENet.CreatePacket(bytes, (IntPtr)Data.Length, DeliveryMethod);
+                BitLength = 0;
+                BitLocation = 0;
+
+                fixed (byte* bytes = Data)
+                {
+                    return ENet.CreatePacket(bytes, (IntPtr)Data.Length, DeliveryMethod);
+                }
             }
-
-            this.BitLength = 0;
-            this.BitLocation = 0;
-        //    this.Data = emptyData;
-
-            return Packet;
         }
-        
-
+        */
     }
 }
