@@ -13,6 +13,7 @@ namespace MicroNet
 {
     public unsafe class Program
     {
+      
         private static bool isPooling = true;
         private static void Client()
         {
@@ -41,6 +42,7 @@ namespace MicroNet
 
         private static void Server()
         {
+
             LocalHost host = new LocalHost(new NetConfiguration(5001)
             {
                 Port = 8080,
@@ -64,8 +66,11 @@ namespace MicroNet
 
         public static void Main(string[] args)
         {
-            Stopwatch watch = new Stopwatch();
 
+            Console.ReadKey();
+            Stopwatch watch = new Stopwatch();
+            
+         
             Thread[] clients = new Thread[1];
             var server = new Thread(Server);
             server.Start();
@@ -77,15 +82,11 @@ namespace MicroNet
                 clients[i].Start();
             }
 
-            server.Join();     
-
-
-        }
-
-        public static void Test(float f)
-        {
+            server.Join();    
 
         }
+
+
 
     }
 }
