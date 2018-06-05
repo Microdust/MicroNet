@@ -10,7 +10,7 @@ namespace MicroNet.Network
 {
     public class LocalHost : NetworkManager
     {
-        private OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None, 32);
+        private OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.Reliable, 32);
         private Stopwatch watch = new Stopwatch();
 
         public LocalHost(NetConfiguration configuration) : base(configuration)
@@ -37,20 +37,12 @@ namespace MicroNet.Network
             Debug.Log(config.Name, ": OnConnect");
             outgoing.WriteBool(true);
 
-
-
-
             remote.Send(outgoing);
-            
         }
 
         public override void OnDisconnect(RemoteConnection remote)
         {
-
-            if (config.AllowConnectors == false)
-            {
-                Connect("127.0.0.1", 8080);
-            }
+            Debug.Log(config.Name.ToString(), ": OnDisconnect");
 
         }
 
@@ -62,11 +54,9 @@ namespace MicroNet.Network
             if (config.AllowConnectors == false)
             {
                 Debug.Log(msg.ReadBool().ToString());
-                
             }
 
             msg.Remote.Send(outgoing);
-
         }
     }
 }
