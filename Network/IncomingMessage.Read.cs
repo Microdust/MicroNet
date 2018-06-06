@@ -9,7 +9,6 @@ namespace MicroNet.Network
 {
     public unsafe partial class IncomingMessage
     {
-
         public bool ReadBool()
         {
             // Find the right index of the byte array
@@ -184,8 +183,9 @@ namespace MicroNet.Network
 				((returnValue & 0x000000ff) << 24);
 #else
 
-            NetUtilities.Single.Integer = integer;
-            return NetUtilities.Single.Value;
+            
+            NetUtilities.ReadSingle.Integer = integer;
+            return NetUtilities.ReadSingle.Value;
 #endif
         }
 

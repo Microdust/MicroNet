@@ -67,7 +67,7 @@ namespace MicroNet.Network
             }
 
             messageQueue[tail] = msg;
-            tail = (tail + 1) & (messageQueue.Length - 1); // Power of two
+            tail = (tail + 1) % messageQueue.Length; // Power of two                    
             size++;
         }
 
@@ -81,7 +81,7 @@ namespace MicroNet.Network
 
             dequeuedIncomingMessage = messageQueue[head];
             messageQueue[head] = null;
-            head = (head + 1) & (messageQueue.Length - 1); // power of two
+            head = (head + 1) % messageQueue.Length; // power of two
             size--;
             return dequeuedIncomingMessage;
 

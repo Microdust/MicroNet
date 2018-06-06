@@ -10,7 +10,6 @@ namespace MicroNet.Network
 {
     public class LocalHost : NetworkManager
     {
-        private OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.Reliable, 32);
         private Stopwatch watch = new Stopwatch();
 
         public LocalHost(NetConfiguration configuration) : base(configuration)
@@ -35,9 +34,6 @@ namespace MicroNet.Network
         public override void OnConnect(RemoteConnection remote)
         {
             Debug.Log(config.Name, ": OnConnect");
-            outgoing.WriteBool(true);
-
-            remote.Send(outgoing);
         }
 
         public override void OnDisconnect(RemoteConnection remote)
@@ -48,15 +44,12 @@ namespace MicroNet.Network
 
         public override void OnReceived(IncomingMessage msg)
         {
-            //   Debug.Log(config.Name, ": OnReceived");
-
-
-            if (config.AllowConnectors == false)
-            {
-                Debug.Log(msg.ReadBool().ToString());
-            }
-
+            OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None, 8);
+            float value = msg.ReadFloat();
+            Debug.Log(config.Name, ": float: ", value.ToString());
+            outgoing.WriteFloat(value);
             msg.Remote.Send(outgoing);
+
         }
     }
 }

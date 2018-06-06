@@ -12,7 +12,8 @@ namespace MicroNet.Network
     {
         public static byte[] StringBuffer = new byte[255];
 
-        public static NetSingle Single = new NetSingle();
+        public static NetSingle WriteSingle = new NetSingle();
+        public static NetSingle ReadSingle = new NetSingle();
 
     }
 }

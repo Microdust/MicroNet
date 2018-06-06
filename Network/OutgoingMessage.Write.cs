@@ -157,8 +157,8 @@ namespace MicroNet.Network
                 Array.Resize<byte>(ref Data, byteLenght);
             }
 
-            NetUtilities.Single.Value = value;
-            WriteUInt32(NetUtilities.Single.Integer);
+            NetUtilities.WriteSingle.Value = value;
+            WriteUInt32(NetUtilities.WriteSingle.Integer);
         }
 
         // Better

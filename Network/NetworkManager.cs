@@ -48,8 +48,8 @@ namespace MicroNet.Network
         {
             ENet.Initialize();
 
-            InitializePools(16);
-            InitializeQueues(8);
+            InitializePools(32);
+            InitializeQueues(128);
 
             connections = new ENet.Peer*[config.MaxConnections];
 

@@ -65,23 +65,19 @@ namespace MicroNet
 
 
         public static void Main(string[] args)
-        {
-
-            Console.ReadKey();
-            Stopwatch watch = new Stopwatch();
-            
+        {   
          
             Thread[] clients = new Thread[1];
             var server = new Thread(Server);
             server.Start();
-            Thread.Sleep(100);
+           /* Thread.Sleep(100);
 
             for (int i = 0; i < clients.Length; i++)
             {
                 clients[i] = new Thread(Client);
                 clients[i].Start();
             }
-
+            */
             server.Join();    
 
         }

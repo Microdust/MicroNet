@@ -15,8 +15,6 @@ namespace MicroNet.Network
         {
             DeliveryMethod = deliveryMethod;
 
-
-
         }
 
         public OutgoingMessage(int byteSize) : base(byteSize)
