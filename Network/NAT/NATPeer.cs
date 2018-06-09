@@ -52,9 +52,6 @@ namespace MicroNet.Network
                 HandleNatIntroduction(msg);
                 break;
 
-              
-
-
             }
         }
 
@@ -68,7 +65,6 @@ namespace MicroNet.Network
         /// </summary>
         internal void HandleNatIntroduction(IncomingMessage msg)
         {
-            bool isHost = msg.ReadBool();
             IPEndPoint remoteInternal = msg.ReadIPEndPoint();
             IPEndPoint remoteExternal = msg.ReadIPEndPoint();
             string Password = msg.ReadString();

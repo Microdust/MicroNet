@@ -40,7 +40,8 @@ namespace MicroNet.Network
                 NatRemoteConnection natHost = new NatRemoteConnection();
                 natHost.Initialize(msg);
 
-                registeredHosts[natHost.HostingId] = natHost;
+                registeredHosts.Add(natHost.HostingId, natHost);
+               // registeredHosts[natHost.HostingId] = natHost;
 
                 Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.ExternalIp.ToString(), " and local IP: ", natHost.InternalIp.ToString(), " with following hosting ID: ", natHost.HostingId.ToString());
 
@@ -55,11 +56,16 @@ namespace MicroNet.Network
                 NatRemoteConnection client = new NatRemoteConnection();
                 client.Initialize(msg);
 
+                //Local test           
+                byte[] addr = { 89, 233, 23, 45 };
+                client.ExternalIp.Address = new IPAddress(addr);
+
                 Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.ExternalIp.ToString(), " and local IP: ", client.InternalIp.ToString(), " with following hosting ID: ", client.HostingId.ToString());
 
                 Debug.Log(config.Name, ": Received introduction request to hostId: ", client.HostingId.ToString(), " and with the password: ", client.Password);
 
                 NatRemoteConnection host;
+
                 if (registeredHosts.TryGetValue(client.HostingId, out host))
                 {
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
