@@ -52,6 +52,8 @@ namespace MicroNet.Network
                 HandleNatIntroduction(msg);
                 break;
 
+              
+
 
             }
         }
@@ -66,11 +68,12 @@ namespace MicroNet.Network
         /// </summary>
         internal void HandleNatIntroduction(IncomingMessage msg)
         {
-            
             bool isHost = msg.ReadBool();
             IPEndPoint remoteInternal = msg.ReadIPEndPoint();
             IPEndPoint remoteExternal = msg.ReadIPEndPoint();
             string Password = msg.ReadString();
+
+            Debug.Log(config.Name, ": was introduced to: ", remoteExternal.ToString(), " with an internal address of: ", remoteInternal.ToString(), " and the password: ", Password);
 
             OutgoingMessage outgoing = MessagePool.CreateMessage();
 
