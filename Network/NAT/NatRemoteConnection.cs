@@ -27,7 +27,7 @@ namespace MicroNet.Network
 
             InternalIp = msg.ReadIPEndPoint();
      //       isHost = msg.ReadBool();
-            HostingId = msg.ReadUInt64();
+            HostingId = msg.ReadUInt32();
             Password = msg.ReadString();
         }
 

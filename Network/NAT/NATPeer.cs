@@ -92,11 +92,13 @@ namespace MicroNet.Network
             regMessage.Write(NATMessageType.INITIATE_HOST);
 
             IPAddress local = NetUtilities.GetLocalAddress();
+
             Debug.Log("local: ", local.ToString());
             regMessage.Write(new IPEndPoint(local, config.Port));
 
             regMessage.Write(hostId); // HostID slash identifier
 
+            regMessage.WriteString("password");
 
             remote.Send(regMessage);
 
@@ -106,6 +108,8 @@ namespace MicroNet.Network
         {
             OutgoingMessage request = MessagePool.CreateMessage();
             request.DeliveryMethod = DeliveryMethod.Reliable;
+
+
             request.Write(NATMessageType.REQUEST_INTRODUCTION);
 
             // write my internal ipendpoint
@@ -118,7 +122,7 @@ namespace MicroNet.Network
             request.Write(hostId);
 
             // write token
-            request.WriteString("mytoken");
+            request.WriteString("password");
 
             remote.Send(request);
         }

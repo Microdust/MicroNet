@@ -96,6 +96,7 @@ namespace MicroNet.Network
             return (ushort)(firstByteResult | secondByteResult << availableBits | (thirdByteResult | fourthByteResult << availableBits) << 8);      
         }
 
+        /*
         public ulong ReadUInt64()
         {
             int index = BitLocation >> 3;
@@ -156,6 +157,15 @@ namespace MicroNet.Network
             return (ulong)((firstByteResult | secondByteResult << availableBits) | (thirdByteResult | fourthByteResult << availableBits) << 8 |
                 (fifthByteResult | sixthByteResult << availableBits) << 16 | (seventhByteResult | eighthByteResult << availableBits) << 24 | (ninethByteResult | tenthByteResult << availableBits) << 32 | (eleventhByteResult | twelvethByteResult << availableBits) << 40 | (thirteenByteResult | fourteenthByteResult << availableBits) << 48 | fifthteenthByteResult  << 56);
 
+        }
+        */
+
+        public ulong ReadUInt64()
+        {
+            ulong first = ReadUInt32();
+            ulong second = ReadUInt32();
+
+            return first + (second << 32);
         }
 
         public uint ReadUInt32()
