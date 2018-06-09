@@ -41,7 +41,7 @@ namespace MicroNet.Network
 
         public override void OnReady()
         {
-            Connect("127.0.0.1", 8080);
+            Connect("89.233.23.45", 8080);
         }
 
         public override void OnReceived(IncomingMessage msg)
