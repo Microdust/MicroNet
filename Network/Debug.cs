@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public static class Debug
+    internal static class Debug
     {
 
         public static void Log(params string[] message)

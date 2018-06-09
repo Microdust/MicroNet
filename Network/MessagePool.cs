@@ -6,25 +6,28 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public partial class NetworkManager
+    public static class MessagePool
     {
-        private IncomingMessage[] messagePool;
-        private int headPool;       // First valid element in the queue
-        private int tailPool;       // Last valid element in the queue
-        private int sizePool;       // Number of elements.
-        private readonly int growFactorPool = 2;
+        private static OutgoingMessage[] messagePool;
+        private static int headPool;       // First valid element in the queue
+        private static int tailPool;       // Last valid element in the queue
+        private static int sizePool;       // Number of elements.
+        private static readonly int growFactorPool = 2;
 
-        public void InitializePools(int capacity)
+        private static int minSize;
+
+        public static void InitializePool(int capacity, int minimumByte)
         {
             if ((capacity & (capacity - 1)) == 0)
             {
-                messagePool = new IncomingMessage[capacity];
+                messagePool = new OutgoingMessage[capacity];
             }
             else
             {
                 Debug.Error("MessagePool capacity value is not power of two. Defaults to 16");
-                messagePool = new IncomingMessage[16];
+                messagePool = new OutgoingMessage[16];
             }
+            minSize = minimumByte;
 
             headPool = 0;
             tailPool = 0;
@@ -32,17 +35,17 @@ namespace MicroNet.Network
 
             for (int i = 0; i < messagePool.Length; i++)
             {
-                messagePool[i] = new IncomingMessage(config.MessageBufferSize);
+                messagePool[i] = new OutgoingMessage(minSize);
             }
 
         }
 
-        public IncomingMessage GetIncomingMessage()
+        public static OutgoingMessage CreateMessage()
         {
             if (sizePool == 0)
-                return new IncomingMessage(config.MessageBufferSize);
+                return new OutgoingMessage(minSize);
 
-            IncomingMessage removed = messagePool[headPool];
+            OutgoingMessage removed = messagePool[headPool];
             messagePool[headPool] = null;
             headPool = (headPool + 1) & (messagePool.Length - 1); // power of two
             sizePool--;
@@ -52,12 +55,12 @@ namespace MicroNet.Network
         /// <summary>
         /// Recycle an 'IncomingMessage' by returning it to the internal message pool
         /// </summary>
-        public void Recycle(IncomingMessage msg)
+        public static void Recycle(OutgoingMessage msg)
         {
             if (sizePool == messagePool.Length)
             {
                 int newLength = messagePool.Length * growFactorPool;
-                IncomingMessage[] tempArray = new IncomingMessage[newLength];
+                OutgoingMessage[] tempArray = new OutgoingMessage[newLength];
                 if (sizePool > 0)
                 {
                     if (headPool < tailPool)
@@ -75,7 +78,7 @@ namespace MicroNet.Network
                 tailPool = (sizePool == newLength) ? 0 : sizePool;
             }
 
-            msg.Reset();
+            msg.Recycle();
 
             messagePool[tailPool] = msg;
             tailPool = (tailPool + 1) & (messagePool.Length - 1); // Power of two

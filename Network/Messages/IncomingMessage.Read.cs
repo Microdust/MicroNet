@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,6 @@ namespace MicroNet.Network
 
         public byte ReadByte()
         {
-
             int index = BitLocation >> 3;
 
             int bitPosInByte = BitLocation - (index * 8);
@@ -54,7 +54,6 @@ namespace MicroNet.Network
 
             // mask away unused bits (Bits that may be for another read, in the same byte)
             secondByteResult &= (byte)(255 >> availableBits);
-
 
             // Using an OR bit operator | we can add the two binary numbers from each byte  Example: 00000011
             // For example if value is 33 it has the binary code of                                  11001000
@@ -83,30 +82,84 @@ namespace MicroNet.Network
             // mask away unused bits lower than (right of) relevant bits in first byte
             byte firstByteResult = (byte)(Data[index] >> bitPosInByte);
             index++;
+
             byte secondByteResult = Data[index];
             byte thirdByteResult = (byte)(Data[index] >> bitPosInByte);
 
+            index++;
+            byte fourthByteResult = Data[index];
+
             // mask away unused bits (Bits that may be for another read, in the same byte)
             secondByteResult &= (byte)(255 >> availableBits);
+            fourthByteResult &= (byte)(255 >> availableBits);
 
-
-            result = firstByteResult | secondByteResult << availableBits | thirdByteResult << 8;
-
-
-#if BIGENDIAN
-			// reorder bytes
-			uint retVal = returnValue;
-			retVal = ((retVal & 0x0000ff00) >> 8) | ((retVal & 0x000000ff) << 8);
-			return (ushort)retVal;
-#else
-            return (ushort)result;
-#endif        
+            return (ushort)(firstByteResult | secondByteResult << availableBits | (thirdByteResult | fourthByteResult << availableBits) << 8);      
         }
 
+        public ulong ReadUInt64()
+        {
+            int index = BitLocation >> 3;
+
+            int bitPosInByte = BitLocation - (index * 8);
+
+            BitLocation += 64;
+
+            if (bitPosInByte == 0)
+            {
+                return (ulong)(Data[index] | Data[index + 1] << 8 | Data[index + 2] << 16 | Data[index + 3] << 24 | Data[index + 4] << 32 | Data[index + 5] << 40 | Data[index + 6] << 48 
+                    | Data[index + 7] << 56);
+            }
+
+            int availableBits = 8 - bitPosInByte;
+            // mask away unused bits lower than (right of) relevant bits in first byte
+
+            byte firstByteResult = (byte)(Data[index] >> bitPosInByte);
+            index++;
+
+            byte secondByteResult = Data[index];
+            byte thirdByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte fourthByteResult = Data[index];
+            byte fifthByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte sixthByteResult = Data[index];
+            byte seventhByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte eighthByteResult = Data[index];
+            byte ninethByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte tenthByteResult = Data[index];
+            byte eleventhByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte twelvethByteResult = Data[index];
+            byte thirteenByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            index++;
+            byte fourteenthByteResult = (Data[index]);
+            byte fifthteenthByteResult = (byte)(Data[index] >> bitPosInByte);
+
+            // mask away unused bits (Bits that are from another read, in the same byte)
+            secondByteResult &= (byte)(255 >> availableBits);
+            fourthByteResult &= (byte)(255 >> availableBits);
+            sixthByteResult &= (byte)(255 >> availableBits);
+            eighthByteResult &= (byte)(255 >> availableBits);
+            tenthByteResult &= (byte)(255 >> availableBits);
+            twelvethByteResult &= (byte)(255 >> availableBits);
+            fourteenthByteResult &= (byte)(255 >> availableBits);
+
+
+            return (ulong)((firstByteResult | secondByteResult << availableBits) | (thirdByteResult | fourthByteResult << availableBits) << 8 |
+                (fifthByteResult | sixthByteResult << availableBits) << 16 | (seventhByteResult | eighthByteResult << availableBits) << 24 | (ninethByteResult | tenthByteResult << availableBits) << 32 | (eleventhByteResult | twelvethByteResult << availableBits) << 40 | (thirteenByteResult | fourteenthByteResult << availableBits) << 48 | fifthteenthByteResult  << 56);
+
+        }
 
         public uint ReadUInt32()
         {
-
             int index = BitLocation >> 3;
 
             int bitPosInByte = BitLocation - (index * 8);
@@ -136,75 +189,28 @@ namespace MicroNet.Network
 
             byte EightByteResult = (Data[index + 1]);
 
-            // mask away unused bits (Bits that may be for another read, in the same byte)
+            // mask away unused bits (Bits that are from another read, in the same byte)
             secondByteResult &= (byte)(255 >> availableBits);
             fourthByteResult &= (byte)(255 >> availableBits);
             sixthByteResult &= (byte)(255 >> availableBits);
 
-            uint returnValue;
-
-            returnValue = (uint)((firstByteResult | secondByteResult << availableBits) | (thirdByteResult | fourthByteResult << availableBits) << 8 | 
-                (fifthByteResult | sixthByteResult << availableBits) << 16 | (seventhByteResult | EightByteResult << availableBits) << 24);
-
-
-#if BIGENDIAN
-			// reorder bytes
-			return
-				((returnValue & 0xff000000) >> 24) |
-				((returnValue & 0x00ff0000) >> 8) |
-				((returnValue & 0x0000ff00) << 8) |
-				((returnValue & 0x000000ff) << 24);
-#else
-            return returnValue;
-#endif           
-          
-
+            return (uint)((firstByteResult | secondByteResult << availableBits) | (thirdByteResult | fourthByteResult << availableBits) << 8 | 
+                (fifthByteResult | sixthByteResult << availableBits) << 16 | (seventhByteResult | EightByteResult << availableBits) << 24);     
         }
 
 
-        public float ReadFloat()
-        {
-            uint integer;
-
-            integer = ReadByte();
-
-            integer |= (uint)(ReadByte() << 8);
-
-            integer |= (uint)(ReadByte() << 16);
-
-            integer |= (uint)(ReadByte() << 24);
-
-#if BIGENDIAN
-			// reorder bytes
-			return
-				((returnValue & 0xff000000) >> 24) |
-				((returnValue & 0x00ff0000) >> 8) |
-				((returnValue & 0x0000ff00) << 8) |
-				((returnValue & 0x000000ff) << 24);
-#else
-
-            
-            NetUtilities.ReadSingle.Integer = integer;
-            return NetUtilities.ReadSingle.Value;
-#endif
-        }
-
-
-      
         /// <summary>
 		/// Reads a string written using Write(string)
 		/// </summary>
 		public string ReadString()
         {
-            int byteLen = (int)ReadUInt32();
+            int byteLen = ReadUInt16();
 
             if (byteLen <= 0)
                 return string.Empty;
 
             if ((ulong)(BitLength - BitLocation) < ((ulong)byteLen * 8))
             {
-                // not enough data
-                Debug.Error("Overflow error");
 				BitLocation = BitLength;
 				return null; // unfortunate; but we need to protect against DDOS
 
@@ -259,6 +265,43 @@ namespace MicroNet.Network
                 byte[] bytes = new byte[byteLen];
                 return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
             }
+        }
+
+        public IPEndPoint ReadIPEndPoint()
+        {
+            byte len = ReadByte();
+            byte[] addressBytes = new byte[len];
+
+            for (int i = 0; i < len; i++)
+                addressBytes[i] = ReadByte();
+
+
+            int port = ReadUInt16();
+
+
+            return new IPEndPoint(new IPAddress(addressBytes), port);
+        }
+
+
+        public sbyte ReadSByte()
+        {
+            return (sbyte)ReadByte();
+        }
+
+        public short ReadInt16()
+        {
+            return (short)ReadUInt16();
+        }
+
+        public int ReadInt32()
+        {
+            return (int)ReadUInt32();
+        }
+
+        public float ReadFloat()
+        {
+            NetUtilities.ReadSingle.Integer = ReadUInt32();
+            return NetUtilities.ReadSingle.Value;
         }
 
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,12 +13,12 @@ namespace MicroNet.Network
     public unsafe abstract partial class NetworkManager
     {
         public NetConfiguration config;
+
         private Thread networkThread;
         private bool isRunning;
         private ENet.Host* ENetHost;
 
         private ENet.Peer*[] connections;
-
 
         private IncomingMessage msg;
 
@@ -48,8 +49,9 @@ namespace MicroNet.Network
         {
             ENet.Initialize();
 
-            InitializePools(32);
-            InitializeQueues(128);
+            InitializePools(config.MessagePoolSize);
+            InitializeQueues(config.MessageBufferSize);
+            MessagePool.InitializePool(config.MessagePoolSize, config.MessageBufferSize);
 
             connections = new ENet.Peer*[config.MaxConnections];
 
@@ -66,7 +68,6 @@ namespace MicroNet.Network
             {
                 ENetHost = ENet.CreateHost(null, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
 
- 
             }
 
             if (ENetHost == null)
@@ -75,7 +76,7 @@ namespace MicroNet.Network
                 return;
             }
 
-            
+
 
             IncomingMessage readyEvent = GetIncomingMessage();
             readyEvent.Event = EventMessage.NetworkReady;
@@ -118,7 +119,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroBroadcast(ENetHost, channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroBroadcast(ENetHost, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -129,7 +130,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroBroadcast(ENetHost, 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroBroadcast(ENetHost, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -140,7 +141,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(connections[connectionId], channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroSend(connections[connectionId], channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -151,7 +152,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(connections[connectionId], 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroSend(connections[connectionId], 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -243,12 +244,13 @@ namespace MicroNet.Network
                             connections[evt.peer->incomingPeerID] = evt.peer;
 
                             internalMsg = GetIncomingMessage();
-                            internalMsg.InitalizeEvent(evt);
+                            
+                            internalMsg.Event = evt.type;
+                            internalMsg.Remote.Peer = evt.peer;
 
                             IncomingEnqueue(internalMsg);
 
                             connectionCount++;
-
                             break;
                         }
                         case EventMessage.Disconnect:
@@ -256,16 +258,34 @@ namespace MicroNet.Network
                             connections[evt.peer->incomingPeerID] = evt.peer;
 
                             internalMsg = GetIncomingMessage();
-                            internalMsg.InitalizeEvent(evt);
+
+                            internalMsg.Type = evt.data;
+
+                            internalMsg.Event = evt.type;
+                            internalMsg.Remote.Peer = evt.peer;
 
                             IncomingEnqueue(internalMsg);
+
                             connectionCount--;
                             break;
                         }
                         case EventMessage.Receive:
                         {   
                             internalMsg = GetIncomingMessage();
-                            internalMsg.Initialize(evt);
+
+                            internalMsg.Type = evt.data;
+                            internalMsg.Event = evt.type;
+                            internalMsg.Remote.Peer = evt.peer;
+
+                            int length = (int)evt.packet->dataLength;
+
+                            if (length > internalMsg.Data.Length)
+                            {
+                                Debug.Log("Incoming Message array was too big, had to resize");
+                                internalMsg.Data = new byte[length];
+                            }
+
+                            Marshal.Copy(evt.packet->data, internalMsg.Data, 0, length);
 
                             IncomingEnqueue(internalMsg);
                             break;

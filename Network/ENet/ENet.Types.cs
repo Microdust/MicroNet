@@ -7,22 +7,22 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public static unsafe partial class ENet
+    internal static unsafe partial class ENet
     {
         [StructLayout(LayoutKind.Sequential)]
-        public struct Address
+        internal struct Address
         {
             public uint Host;
             public ushort Port;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Host
+        internal struct Host
         {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Channel
+        internal struct Channel
         {
             public ushort outgoingReliableSequenceNumber;
             public ushort outgoingUnreliableSequenceNumber;
@@ -34,7 +34,7 @@ namespace MicroNet.Network
             public ENetList* incomingUnreliableCommands;
         }
 
-        public struct Compressor
+        internal struct Compressor
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void compress_cb(IntPtr context, IntPtr inBuffers, IntPtr inBufferCount, IntPtr inLimit, IntPtr outData, IntPtr outLimit);
@@ -50,7 +50,7 @@ namespace MicroNet.Network
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Event
+        internal struct Event
         {
             public EventMessage type;
             public Peer* peer;
@@ -61,7 +61,7 @@ namespace MicroNet.Network
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ListNode
+        internal struct ListNode
         {
             public ListNode* next, previous;
         }
@@ -69,13 +69,13 @@ namespace MicroNet.Network
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ENetList
+        internal struct ENetList
         {
             public ListNode* sentinel;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Packet
+        internal struct Packet
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void freeCallback_cb(IntPtr* packet);
@@ -89,7 +89,7 @@ namespace MicroNet.Network
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Callbacks
+        internal struct Callbacks
         {
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate IntPtr malloc_cb(IntPtr size);
@@ -104,7 +104,7 @@ namespace MicroNet.Network
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Peer
+        internal struct Peer
         {
             public ListNode dispatchList;
             public Host* host;

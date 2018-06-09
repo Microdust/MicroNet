@@ -12,12 +12,13 @@ namespace MicroNet.Network
         private IncomingMessage[] messageQueue;
         private IncomingMessage dequeuedIncomingMessage;
 
+        private ReaderWriterLockSlim slimLock = new ReaderWriterLockSlim();
+
         private int head;       // First valid element in the queue
         private int tail;       // Last valid element in the queue
         private int size;       // Number of elements.
         private readonly int growFactor = 2;
-
-        private readonly ReaderWriterLockSlim slimLock = new ReaderWriterLockSlim();
+        
 
         /// <summary>
         /// Capacity must be a power of two value
@@ -45,30 +46,42 @@ namespace MicroNet.Network
         /// </summary>
         public void IncomingEnqueue(IncomingMessage msg)
         {
-            if (size == messageQueue.Length)
+            slimLock.EnterWriteLock();
+            try
             {
-                int newLength = messageQueue.Length * growFactor;
-                IncomingMessage[] tempArray = new IncomingMessage[newLength];
-                if (size > 0)
+                if (size == messageQueue.Length)
                 {
-                    if (head < tail)
+                    int newLength = messageQueue.Length * growFactor;
+                    IncomingMessage[] tempArray = new IncomingMessage[newLength];
+                    if (size > 0)
                     {
-                        Array.Copy(messageQueue, head, tempArray, 0, size);
+                        if (head < tail)
+                        {
+                            Array.Copy(messageQueue, head, tempArray, 0, size);
+                        }
+                        else
+                        {
+                            Array.Copy(messageQueue, head, tempArray, 0, messageQueue.Length - head);
+                            Array.Copy(messageQueue, 0, tempArray, messageQueue.Length - head, tail);
+                        }
                     }
-                    else
-                    {
-                        Array.Copy(messageQueue, head, tempArray, 0, messageQueue.Length - head);
-                        Array.Copy(messageQueue, 0, tempArray, messageQueue.Length - head, tail);
-                    }
+                    messageQueue = tempArray;
+                    head = 0;
+                    tail = (size == newLength) ? 0 : size;
                 }
-                messageQueue = tempArray;
-                head = 0;
-                tail = (size == newLength) ? 0 : size;
+
+                messageQueue[tail] = msg;
+                tail = (tail + 1) & (messageQueue.Length - 1); // Power of two                    
+                size++;
+            }
+            finally
+            {
+                slimLock.ExitWriteLock();
             }
 
-            messageQueue[tail] = msg;
-            tail = (tail + 1) % messageQueue.Length; // Power of two                    
-            size++;
+            
+
+            
         }
 
         /// <summary>
@@ -79,10 +92,19 @@ namespace MicroNet.Network
             if (size == 0)
                 return null;
 
-            dequeuedIncomingMessage = messageQueue[head];
-            messageQueue[head] = null;
-            head = (head + 1) % messageQueue.Length; // power of two
-            size--;
+            slimLock.EnterWriteLock();
+            try
+            {
+                dequeuedIncomingMessage = messageQueue[head];
+                messageQueue[head] = null;
+                head = (head + 1) & (messageQueue.Length - 1); // power of two
+                size--;
+            }
+            finally
+            {
+                slimLock.ExitWriteLock();
+            }
+
             return dequeuedIncomingMessage;
 
         }

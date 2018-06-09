@@ -45,7 +45,6 @@ namespace MicroNet.Network
         /// </summary>
         public uint OutgoingBandwidth = 0;
 
-
         /// <summary>
         /// Allow others to connect. For example, set true if hosting.
         /// </summary>
@@ -62,9 +61,14 @@ namespace MicroNet.Network
         public int NetworkRate = 50;
 
         /// <summary>
-        /// The minimum size of a sent byte. If the buffer size exceeds 16 bytes it will resize the array which is performance-heavy.
+        /// The allocated size of the message buffer. If the buffer size exceeds it will resize the array which is performance-heavy.
         /// </summary>
-        public int MinimumByteSize = 32;
+        public int MessageBufferSize = 128;
+
+        /// <summary>
+        /// The amount of allocated messages in the message pool. NOTICE: This number must be power of two.
+        /// </summary>
+        public int MessagePoolSize = 32;
 
         /// <summary>
         /// The number of channels to allocate for any default connection

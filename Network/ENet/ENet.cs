@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public static unsafe partial class ENet
+    internal static unsafe partial class ENet
     {
-        private  const string DLL = "ENet64.dll";
+        private const string DLL = "ENet64.dll";
 
         public const int PEER_PACKET_THROTTLE_SCALE = 32;
         public const int PEER_PACKET_THROTTLE_ACCELERATION = 2;

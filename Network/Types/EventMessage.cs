@@ -15,8 +15,6 @@ namespace MicroNet.Network
 
         NetworkReady = 127,
         NetworkStopped = 128
-            
-
-        
+                    
     }
 }

@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 namespace MicroNet.Network
 {
     [StructLayout(LayoutKind.Explicit)]
-    public struct NetSingle
+    internal class NetSingle
     {
-        [FieldOffset(0)]
+
+       [FieldOffset(0)]
         public float Value;
 
         [FieldOffset(0)]
@@ -29,5 +30,4 @@ namespace MicroNet.Network
         }
 
     }
-
 }

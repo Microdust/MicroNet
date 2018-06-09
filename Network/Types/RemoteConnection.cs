@@ -18,14 +18,38 @@ namespace MicroNet.Network
             get { return Peer->incomingPeerID; }
         }
 
+        internal void ChangeAddress(IPAddress address, ushort port)
+        {
+            ENet.Address remoteAddr = new ENet.Address();
+            remoteAddr.Port = port;
+            ENet.AddressSetHost(ref remoteAddr, address.GetAddressBytes());
+
+            Peer->address = remoteAddr;
+        }
+
 
         /// <summary>
-        /// Returns the IP address of the remote peer
+        /// Returns the IP address of the remote connection
         /// </summary>
         public IPAddress IPAddress
         {
             get { return new IPAddress(Peer->address.Host); }
+        }
 
+        /// <summary>
+        /// Returns the round trip time for the remote connection
+        /// </summary>
+        public uint RTT
+        {
+            get { return Peer->roundTripTime; }
+        }
+
+        /// <summary>
+        /// Returns the time since last message was sent from the remote host (check if true)
+        /// </summary>
+        public uint TimeSinceLastMessage
+        {
+            get { return Peer->lastSendTime; }
         }
 
         /// <summary>
@@ -43,7 +67,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(Peer, 0, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -54,7 +78,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(Peer, channelId, bytes, (IntPtr)msg.Data.Length, msg.DeliveryMethod);
+                ENet.MicroSend(Peer, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 

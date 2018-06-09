@@ -2,18 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public class LocalHost : NetworkManager
+    internal class LocalHost : NetworkManager
     {
         private Stopwatch watch = new Stopwatch();
 
         public LocalHost(NetConfiguration configuration) : base(configuration)
         {
+
         }
 
         public override void OnStop()
@@ -34,21 +36,23 @@ namespace MicroNet.Network
         public override void OnConnect(RemoteConnection remote)
         {
             Debug.Log(config.Name, ": OnConnect");
+
         }
 
         public override void OnDisconnect(RemoteConnection remote)
         {
             Debug.Log(config.Name.ToString(), ": OnDisconnect");
-
         }
 
         public override void OnReceived(IncomingMessage msg)
         {
-            OutgoingMessage outgoing = new OutgoingMessage(DeliveryMethod.None, 8);
-            float value = msg.ReadFloat();
-            Debug.Log(config.Name, ": float: ", value.ToString());
-            outgoing.WriteFloat(value);
+            OutgoingMessage outgoing = MessagePool.CreateMessage();
+            outgoing.Write(msg.ReadVector2());
+
+
             msg.Remote.Send(outgoing);
+
+            MessagePool.Recycle(outgoing);
 
         }
     }
