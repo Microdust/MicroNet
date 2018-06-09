@@ -279,11 +279,14 @@ namespace MicroNet.Network
 
         public IPEndPoint ReadIPEndPoint()
         {
-            byte len = ReadByte();
+            /*byte len = ReadByte();
             byte[] addressBytes = new byte[len];
 
             for (int i = 0; i < len; i++)
                 addressBytes[i] = ReadByte();
+                */
+
+            byte[] addressBytes = { ReadByte(), ReadByte(), ReadByte(), ReadByte() };
 
 
             int port = ReadUInt16();

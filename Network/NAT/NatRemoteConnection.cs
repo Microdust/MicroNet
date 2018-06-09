@@ -35,7 +35,7 @@ namespace MicroNet.Network
         {
             OutgoingMessage message = MessagePool.CreateMessage();
 
-            message.Type = NATMessageType.INTRODUCTION;
+            message.Write(NATMessageType.INTRODUCTION);
             //            um.Write((byte)0);
             message.Write(conn.InternalIp);
             message.Write(conn.ExternalIp);

@@ -63,10 +63,6 @@ namespace MicroNet.Network
                 if (registeredHosts.TryGetValue(client.HostingId, out host))
                 {
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
-                    byte[] addr = Encoding.ASCII.GetBytes("89.233.23.45");
-                    
-                    //Local test                   
-                    client.ExternalIp.Address = new IPAddress(addr);
 
                     client.Introduce(host);
                     host.Introduce(client);

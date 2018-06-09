@@ -302,13 +302,17 @@ namespace MicroNet.Network
         public void Write(IPEndPoint endPoint)
         {
             byte[] bytes = endPoint.Address.GetAddressBytes();
-            CheckAndBalance(24 + bytes.Length);
-            Write((byte)bytes.Length);
+           // CheckAndBalance(16 + bytes.Length);
+            CheckAndBalance(48);
+           // Write((byte)bytes.Length);
 
-            for (int i = 0; i < bytes.Length; i++)
-                WriteByte(bytes[i]);
+           // for (int i = 0; i < bytes.Length; i++)
+            WriteByte(bytes[0]);
+            WriteByte(bytes[1]);
+            WriteByte(bytes[2]);
+            WriteByte(bytes[3]);
 
-            
+
             Write((ushort)endPoint.Port);
         }
 
