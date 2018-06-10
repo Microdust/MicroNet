@@ -64,13 +64,14 @@ namespace MicroNet.Network
 
                 Debug.Log(config.Name, ": Received introduction request to hostId: ", client.HostingId.ToString(), " and with the password: ", client.Password);
 
-                NatRemoteConnection host;
-
+                NatRemoteConnection host;    
                 if (registeredHosts.TryGetValue(client.HostingId, out host))
                 {
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
+                    Debug.Log("host: ", host.InternalIp.ToString());
 
                     client.Introduce(host);
+
                     host.Introduce(client);
                 }
            

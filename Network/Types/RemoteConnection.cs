@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public unsafe sealed class RemoteConnection
+    public unsafe struct RemoteConnection
     {
         internal ENet.Peer* Peer;
-        public bool IsConnected = true;
+        public bool IsConnected;
 
         public uint ConnectionId
         {
@@ -26,7 +26,6 @@ namespace MicroNet.Network
 
             Peer->address = remoteAddr;
         }
-
 
         /// <summary>
         /// Returns the IP address of the remote connection

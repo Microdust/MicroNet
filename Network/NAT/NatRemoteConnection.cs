@@ -26,7 +26,6 @@ namespace MicroNet.Network
             ExternalIp = new IPEndPoint(remote.IPAddress, 8080);
 
             InternalIp = msg.ReadIPEndPoint();
-     //       isHost = msg.ReadBool();
             HostingId = msg.ReadUInt32();
             Password = msg.ReadString();
         }

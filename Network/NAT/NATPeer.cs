@@ -52,6 +52,10 @@ namespace MicroNet.Network
                 HandleNatIntroduction(msg);
                 break;
 
+                case NATMessageType.NAT_PUNCHTHROUGH:
+                Debug.Log(config.Name, ": NAT PUNCH THROUGH...");
+                break;
+
             }
         }
 
@@ -72,14 +76,19 @@ namespace MicroNet.Network
             Debug.Log(config.Name, ": was introduced to: ", remoteExternal.ToString(), " with an internal address of: ", remoteInternal.ToString(), " and the password: ", Password);
 
             OutgoingMessage outgoing = MessagePool.CreateMessage();
+            outgoing.Write(NATMessageType.NAT_PUNCHTHROUGH);
+            outgoing.WriteString(Password);
+
+            msg.Remote.ChangeAddress(remoteExternal.Address, 8080);
 
             //   if (!isHost && m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.NatIntroductionSuccess) == false)
             //       return; // no need to punch - we're not listening for nat intros!
 
             // send internal punch
 
-            Connect(remoteInternal.Address, 8080);
-            Connect(remoteExternal.Address, 8080);
+            msg.Remote.Send(outgoing);
+
+            //Connect(remoteExternal.Address, 8080);
 
         }
 
