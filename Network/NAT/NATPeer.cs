@@ -41,8 +41,13 @@ namespace MicroNet.Network
 
         public override void OnReady()
         {
-            Debug.Log(config.Name,": Connecting to NAT relay server...");
-            Connect("89.233.23.45", 8080);
+            Debug.Log(config.Name, ": Connecting to NAT relay server...");
+
+            byte[] IP = { 127, 0, 0, 1 };
+            IPEndPoint point = new IPEndPoint(new IPAddress(IP), 5000);
+
+            Connect(point);
+
         }
 
         public override void OnReceived(IncomingMessage msg)

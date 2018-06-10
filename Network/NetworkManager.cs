@@ -95,7 +95,6 @@ namespace MicroNet.Network
             remoteAddr.Port = port;
             ENet.AddressSetHost(ref remoteAddr, Encoding.ASCII.GetBytes(address));
 
-
             ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
         }
 
@@ -103,18 +102,21 @@ namespace MicroNet.Network
         /// <summary>
         /// Request to connect to a remote host at specified address and port.
         /// </summary>
-        public void Connect(System.Net.IPAddress address, ushort port)
+        public void Connect(IPEndPoint ipEndPoint)
         {
-            ENet.Address remoteAddr = new ENet.Address();
-            remoteAddr.Port = port;
-            ENet.AddressSetHost(ref remoteAddr, address.GetAddressBytes());
+            // Check if this technique actually works in anycase. Stay noted, this is prevent the obsolete IPv4 feature in .NET IPAdress
+            // However, we cut away the IPv6 section - This is because ENet does not support IPv6.
+            uint value = BitConverter.ToUInt32(ipEndPoint.Address.GetAddressBytes(), 0);
+
+            ENet.Address remoteAddr = new ENet.Address()
+            {
+                Host = value, 
+                Port = remoteAddr.Port = (ushort)ipEndPoint.Port,
+            };
 
             ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
-
         }
 
-
-    
 
         /// <summary>
         /// Queues a packet to be sent to all peers associated with the host.
@@ -160,27 +162,6 @@ namespace MicroNet.Network
             }
         }
 
-
-        internal int SocketSend(IPEndPoint addr, OutgoingMessage msg)
-        {
-            /*
-            ENet.Address address = new ENet.Address();
-            address.Port = (ushort)addr.Port;
-
-            if (ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes()) != 0)
-            {
-                Debug.Log(config.Name, "Failed to resolve host name");
-            }
-
-            Debug.Log(config.Name, " hostname: ", address.Host.ToString(), " : ", address.Port.ToString());
-            
-            fixed (byte* bytes = msg.Data)
-            {
-               return ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
-            }
-            */
-            return 0;
-        }
 
         internal void NATPunching(IPEndPoint addr)
         {

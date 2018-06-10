@@ -45,7 +45,7 @@ namespace MicroNet
         {
             NATServer host = new NATServer(new NetConfiguration(5001)
             {
-                Port = 8080,
+                Port = 5000,
                 AllowConnectors = true,
                 MaxConnections = 5,
                 Name = "NATServer",
@@ -117,7 +117,7 @@ namespace MicroNet
 
             LocalHost host = new LocalHost(new NetConfiguration(5001)
             {
-                Port = 8080,
+                Port = 5000,
                 AllowConnectors = true,
                 MaxConnections = 5,
                 Name = "Server",
@@ -139,7 +139,8 @@ namespace MicroNet
         public static void Main(string[] args)
         {
 
-            Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
+
+            /*
             bool isRunning = true;
 
    
@@ -171,9 +172,9 @@ namespace MicroNet
                     Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
                 }
             }
+            */
 
-
-            /*
+          
 
             var server = new Thread(NATServer);
             server.Start();
@@ -184,23 +185,24 @@ namespace MicroNet
             clients[1] = new Thread(NATHost);
             clients[1].Start();
 
-            clients[0] = new Thread(NATClient);
+            server.Join();
 
-            Console.ReadKey();
-            clients[0].Start();
+            //            clients[0] = new Thread(NATClient);
 
+            // Console.ReadKey();
+            //          clients[0].Start();
 
 
             /*
-            for (int i = 0; i < clients.Length; i++)
-            {
-                clients[i] = new Thread(NATClient);
-                clients[i].Start();
-            }
+                        for (int i = 0; i < clients.Length; i++)
+                        {
+                            clients[i] = new Thread(NATClient);
+                            clients[i].Start();
+                        }
 
 
-            server.Join(); 
-                 */
+
+            */
 
         }
 
