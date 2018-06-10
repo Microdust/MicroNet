@@ -163,6 +163,7 @@ namespace MicroNet.Network
 
         internal int SocketSend(IPEndPoint addr, OutgoingMessage msg)
         {
+            /*
             ENet.Address address = new ENet.Address();
             address.Port = (ushort)addr.Port;
 
@@ -177,19 +178,22 @@ namespace MicroNet.Network
             {
                return ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
             }
+            */
+            return 0;
         }
 
         internal void NATPunching(IPEndPoint addr)
         {
             ENet.Address address = new ENet.Address();
             address.Port = (ushort)addr.Port;
+            string strAddr = addr.Address.ToString();
 
-            if (ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes()) != 0)
+            if (ENet.AddressSetHost(ref address, Encoding.ASCII.GetBytes(strAddr)) != 0)
             {
-                Debug.Log(config.Name, "Failed to resolve host name");
+                Debug.Log(config.Name, " Failed to resolve host name");
             }
 
-            Debug.Log(config.Name, " hostname: ", address.Host.ToString(), " : ", address.Port.ToString());
+            Debug.Log(config.Name, " Punching: ", address.Host.ToString(), " : ", address.Port.ToString());
 
             fixed (byte* bytes = msg.Data)
             {
