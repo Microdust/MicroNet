@@ -32,10 +32,11 @@ namespace MicroNet.Network
 
         public void Introduce(NatRemoteConnection conn)
         {
+            Debug.Log("NATServer: Introducing: ", conn.ExternalIp.ToString(), " to: ", remote.IPAddress.ToString());
             OutgoingMessage message = MessagePool.CreateMessage();
 
             message.Write(NATMessageType.INTRODUCTION);
-            //            um.Write((byte)0);
+
             message.Write(conn.InternalIp);
             message.Write(conn.ExternalIp);
             message.WriteString(conn.Password);

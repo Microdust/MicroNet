@@ -166,7 +166,12 @@ namespace MicroNet.Network
             ENet.Address address = new ENet.Address();
             address.Port = (ushort)addr.Port;
 
-            ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes());
+            if (ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes()) != 0)
+            {
+                Debug.Log(config.Name, "Failed to resolve host name");
+            }
+
+            Debug.Log(config.Name, " hostname: ", address.Host.ToString(), " : ", address.Port.ToString());
             
             fixed (byte* bytes = msg.Data)
             {
@@ -178,14 +183,20 @@ namespace MicroNet.Network
         {
             ENet.Address address = new ENet.Address();
             address.Port = (ushort)addr.Port;
-            ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes());
+
+            if (ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes()) != 0)
+            {
+                Debug.Log(config.Name, "Failed to resolve host name");
+            }
+
+            Debug.Log(config.Name, " hostname: ", address.Host.ToString(), " : ", address.Port.ToString());
 
             fixed (byte* bytes = msg.Data)
             {
                 for (int i = 0; i < 8; i++)
                 {
                     ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
-                    Thread.Sleep(10);
+                    Thread.Sleep(5);
                 }
             }
 

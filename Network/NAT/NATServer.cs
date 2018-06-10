@@ -71,7 +71,7 @@ namespace MicroNet.Network
                 if (registeredHosts.TryGetValue(client.HostingId, out host))
                 {
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
-                    Debug.Log("host: ", host.InternalIp.ToString());
+                    
 
                     host.Introduce(client);
                     client.Introduce(host);
