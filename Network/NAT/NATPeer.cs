@@ -69,20 +69,25 @@ namespace MicroNet.Network
         /// </summary>
         internal void HandleNatIntroduction(IncomingMessage msg)
         {
+            Disconnect(0);
+
             IPEndPoint remoteInternal = msg.ReadIPEndPoint();
             IPEndPoint remoteExternal = msg.ReadIPEndPoint();
             string Password = msg.ReadString();
 
             Debug.Log(config.Name, ": was introduced to: ", remoteExternal.ToString(), " with an internal address of: ", remoteInternal.ToString(), " and the password: ", Password);
 
-            OutgoingMessage outgoing = MessagePool.CreateMessage();
-            outgoing.Write(NATMessageType.NAT_PUNCHTHROUGH);
-            outgoing.WriteString(Password);
+            Connect(remoteExternal.Address, 8080);
 
-            msg.Remote.ChangeAddress(remoteInternal.Address, 8080);
-            msg.Remote.Send(outgoing);
-            msg.Remote.ChangeAddress(remoteExternal.Address, 8080);
-            msg.Remote.Send(outgoing);
+            /* OutgoingMessage outgoing = MessagePool.CreateMessage();
+             outgoing.Write(NATMessageType.NAT_PUNCHTHROUGH);
+             outgoing.WriteString(Password);
+
+             msg.Remote.ChangeAddress(remoteInternal.Address, 8080);
+             msg.Remote.Send(outgoing);
+             msg.Remote.ChangeAddress(remoteExternal.Address, 8080);
+             msg.Remote.Send(outgoing);
+             */
 
             //   if (!isHost && m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.NatIntroductionSuccess) == false)
             //       return; // no need to punch - we're not listening for nat intros!
@@ -91,7 +96,7 @@ namespace MicroNet.Network
 
 
 
-            //Connect(remoteExternal.Address, 8080);
+
 
         }
 
