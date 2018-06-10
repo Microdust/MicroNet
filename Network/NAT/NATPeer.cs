@@ -79,14 +79,17 @@ namespace MicroNet.Network
             outgoing.Write(NATMessageType.NAT_PUNCHTHROUGH);
             outgoing.WriteString(Password);
 
+            msg.Remote.ChangeAddress(remoteInternal.Address, 8080);
+            msg.Remote.Send(outgoing);
             msg.Remote.ChangeAddress(remoteExternal.Address, 8080);
+            msg.Remote.Send(outgoing);
 
             //   if (!isHost && m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.NatIntroductionSuccess) == false)
             //       return; // no need to punch - we're not listening for nat intros!
 
             // send internal punch
 
-            msg.Remote.Send(outgoing);
+
 
             //Connect(remoteExternal.Address, 8080);
 
