@@ -18,17 +18,17 @@ namespace MicroNet.Network
 
         public override void OnConnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, ": Someone connected to the NAT server...");
+            Debug.Log(config.Name, ": Established connection to: ", remote.IPAddress.ToString());
         }
 
         public override void OnDisconnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, ": Someone disconnected from the NAT server...");
+            Debug.Log(config.Name, ": Disconnected from: ", remote.IPAddress.ToString());
         }
 
         public override void OnReady()
         {
-            Debug.Log(config.Name, ": NAT Server is ready...");
+            Debug.Log(config.Name, ": NAT Server is ready");
         }
 
         public override void OnReceived(IncomingMessage msg)
@@ -39,11 +39,14 @@ namespace MicroNet.Network
                 Debug.Log(config.Name, ": Received host register request");
                 NatRemoteConnection natHost = new NatRemoteConnection();
                 natHost.Initialize(msg);
-
                 registeredHosts.Add(natHost.HostingId, natHost);
                // registeredHosts[natHost.HostingId] = natHost;
 
-                Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.ExternalIp.ToString(), " and local IP: ", natHost.InternalIp.ToString(), " with following hosting ID: ", natHost.HostingId.ToString());
+                Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.ExternalIp.ToString(), " and local IP: ", natHost.InternalIp.ToString(), " , hosting ID: ", natHost.HostingId.ToString());
+
+                OutgoingMessage ackMsg = MessagePool.CreateMessage();
+                ackMsg.Write(NATMessageType.ACK);
+                msg.Remote.Send(ackMsg);
 
                 break;
 
@@ -70,11 +73,11 @@ namespace MicroNet.Network
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
                     Debug.Log("host: ", host.InternalIp.ToString());
 
+                    host.Introduce(client);
                     client.Introduce(host);
 
-                    host.Introduce(client);
                 }
-           
+
                 break;
             }
         }

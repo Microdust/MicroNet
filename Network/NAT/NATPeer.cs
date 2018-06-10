@@ -4,11 +4,12 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public class NATPeer : NetworkManager
+    public unsafe class NATPeer : NetworkManager
     {
         private uint hostId = 5000;
 
@@ -21,9 +22,9 @@ namespace MicroNet.Network
 
         public override void OnConnect(RemoteConnection remote)
         {
-            Debug.Log("Connected to: ", remote.IPAddress.ToString());
-
-            if(config.AllowConnectors)
+            Debug.Log(config.Name, " Connected to: ", remote.IPAddress.ToString());
+            
+            if(config.Name == "NATHost")
             {
                 RegisterHosting(remote);
             }
@@ -31,7 +32,6 @@ namespace MicroNet.Network
             {
                 RequestNATIntroduction(remote);
             }
-
         }
 
         public override void OnDisconnect(RemoteConnection remote)
@@ -41,6 +41,7 @@ namespace MicroNet.Network
 
         public override void OnReady()
         {
+            Debug.Log(config.Name,": Connecting to NAT relay server...");
             Connect("89.233.23.45", 8080);
         }
 
@@ -48,6 +49,10 @@ namespace MicroNet.Network
         {
             switch (msg.ReadUInt32())
             {
+                case NATMessageType.ACK:
+                HandleAck(msg);
+                break;
+
                 case NATMessageType.INTRODUCTION:
                 HandleNatIntroduction(msg);
                 break;
@@ -64,20 +69,27 @@ namespace MicroNet.Network
             Debug.Log(config.Name, ": Stopped...");
         }
 
+        public void HandleAck(IncomingMessage msg)
+        {
+            Debug.Log(config.Name, ": Received acknowledgement from master server. Listed for NAT punchthrough...");
+        }
+
         /// <summary>
         /// Called when host/client receives a NatIntroduction message from a master server
         /// </summary>
         internal void HandleNatIntroduction(IncomingMessage msg)
         {
-            Disconnect(0);
 
             IPEndPoint remoteInternal = msg.ReadIPEndPoint();
             IPEndPoint remoteExternal = msg.ReadIPEndPoint();
             string Password = msg.ReadString();
 
-            Debug.Log(config.Name, ": was introduced to: ", remoteExternal.ToString(), " with an internal address of: ", remoteInternal.ToString(), " and the password: ", Password);
+            Debug.Log(config.Name, ": was introduced to external IP: ", remoteExternal.ToString(), ", internal IP: ", remoteInternal.ToString(), " and the password: ", Password);
 
-            Connect(remoteExternal.Address, 8080);
+            NATPunching(remoteExternal);
+
+            //Connect(remoteExternal.Address, (ushort)remoteExternal.Port);
+    
 
             /* OutgoingMessage outgoing = MessagePool.CreateMessage();
              outgoing.Write(NATMessageType.NAT_PUNCHTHROUGH);
@@ -94,11 +106,8 @@ namespace MicroNet.Network
 
             // send internal punch
 
-
-
-
-
         }
+
 
         public void RegisterHosting(RemoteConnection remote)
         {
@@ -109,12 +118,12 @@ namespace MicroNet.Network
 
             IPAddress local = NetUtilities.GetLocalAddress();
 
-            Debug.Log("local: ", local.ToString());
+            Debug.Log(config.Name, ": using local IP: ", local.ToString());
             regMessage.Write(new IPEndPoint(local, config.Port));
 
             regMessage.Write(hostId); // HostID slash identifier
 
-            regMessage.WriteString("password");
+            regMessage.WriteString("hello");
 
             remote.Send(regMessage);
 
@@ -125,20 +134,19 @@ namespace MicroNet.Network
             OutgoingMessage request = MessagePool.CreateMessage();
             request.DeliveryMethod = DeliveryMethod.Reliable;
 
-
             request.Write(NATMessageType.REQUEST_INTRODUCTION);
 
             // write my internal ipendpoint
             IPAddress local = NetUtilities.GetLocalAddress();
 
-            Debug.Log("local: ", local.ToString());
-            request.Write(new IPEndPoint(local, 8080));
+            Debug.Log(config.Name, ": using local IP: ", local.ToString());
+            request.Write(new IPEndPoint(local, config.Port));
 
             // write requested host id
             request.Write(hostId);
 
             // write token
-            request.WriteString("password");
+            request.WriteString("hello");
 
             remote.Send(request);
         }

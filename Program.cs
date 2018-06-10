@@ -69,7 +69,7 @@ namespace MicroNet
         {
             NATPeer host = new NATPeer(new NetConfiguration(5001)
             {
-                Port = 8080,
+                Port = 54321,
                 AllowConnectors = false,
                 MaxConnections = 5,
                 Name = "NATClient",
@@ -92,7 +92,7 @@ namespace MicroNet
         {
             NATPeer host = new NATPeer(new NetConfiguration(5001)
             {
-                Port = 8080,
+                Port = 54321,
                 AllowConnectors = true,
                 MaxConnections = 5,
                 Name = "NATHost",
@@ -139,15 +139,54 @@ namespace MicroNet
         public static void Main(string[] args)
         {
 
-            Thread[] clients = new Thread[2];
+            Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
+            bool isRunning = true;
+
+   
+            while(isRunning)
+            {
+                ConsoleKeyInfo key = Console.ReadKey();
+                Console.WriteLine();
+                if (key.Key == ConsoleKey.D1)
+                {
+                    var server = new Thread(NATServer);
+                    server.Start();
+                    server.Join();
+                }
+                else if (key.Key == ConsoleKey.D2)
+                {
+                    var host = new Thread(NATHost);
+                    host.Start();
+                    host.Join();
+                }
+                else if (key.Key == ConsoleKey.D3)
+                {
+                    var client = new Thread(NATClient);
+                    client.Start();
+                    client.Join();
+                }
+                else
+                {
+                    Console.WriteLine("Wrong key input, please try again...");
+                    Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
+                }
+            }
+
+
+            /*
+
             var server = new Thread(NATServer);
             server.Start();
             Thread.Sleep(100);
 
+
+            Thread[] clients = new Thread[2];
             clients[1] = new Thread(NATHost);
             clients[1].Start();
 
             clients[0] = new Thread(NATClient);
+
+            Console.ReadKey();
             clients[0].Start();
 
 
@@ -158,9 +197,10 @@ namespace MicroNet
                 clients[i] = new Thread(NATClient);
                 clients[i].Start();
             }
-            */
+
 
             server.Join(); 
+                 */
 
         }
 

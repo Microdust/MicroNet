@@ -23,9 +23,9 @@ namespace MicroNet.Network
         public void Initialize(IncomingMessage msg)
         {
             remote = msg.Remote;
-            ExternalIp = new IPEndPoint(remote.IPAddress, 8080);
 
-            InternalIp = msg.ReadIPEndPoint();
+            InternalIp = msg.ReadIPEndPoint();      
+            ExternalIp = new IPEndPoint(remote.IPAddress, InternalIp.Port);
             HostingId = msg.ReadUInt32();
             Password = msg.ReadString();
         }

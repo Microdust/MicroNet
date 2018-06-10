@@ -30,6 +30,11 @@ namespace MicroNet.Network
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "micronet_broadcast")]
         public static extern void MicroBroadcast(Host* host, byte channelID, void* data, IntPtr dataLength, DeliveryMethod flags);
 
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "micronet_socket_send")]
+        public static extern int MicroSocketSend(Host* host, ref Address addr, void* data, IntPtr dataLength);
+
+
+
         #endregion
 
         #region ENet Eseentials

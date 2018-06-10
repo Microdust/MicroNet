@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -109,8 +110,11 @@ namespace MicroNet.Network
             ENet.AddressSetHost(ref remoteAddr, address.GetAddressBytes());
 
             ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+
         }
 
+
+    
 
         /// <summary>
         /// Queues a packet to be sent to all peers associated with the host.
@@ -154,6 +158,53 @@ namespace MicroNet.Network
             {
                 ENet.MicroSend(connections[connectionId], 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
+        }
+
+
+        internal int SocketSend(IPEndPoint addr, OutgoingMessage msg)
+        {
+            ENet.Address address = new ENet.Address();
+            address.Port = (ushort)addr.Port;
+
+            ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes());
+            
+            fixed (byte* bytes = msg.Data)
+            {
+               return ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
+            }
+        }
+
+        internal void NATPunching(IPEndPoint addr)
+        {
+            ENet.Address address = new ENet.Address();
+            address.Port = (ushort)addr.Port;
+            ENet.AddressSetHost(ref address, addr.Address.GetAddressBytes());
+
+            fixed (byte* bytes = msg.Data)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
+                    Thread.Sleep(10);
+                }
+            }
+
+            if (!config.AllowConnectors)
+            {
+                ENet.Connect(ENetHost, ref address, (IntPtr)config.DefaultChannelAmount);
+            }
+            else
+            {
+                fixed (byte* bytes = msg.Data)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
+                        Thread.Sleep(5);
+                    }
+                }
+            }
+
         }
 
         public void Disconnect(uint connectionId, uint flag)
@@ -270,7 +321,7 @@ namespace MicroNet.Network
                             break;
                         }
                         case EventMessage.Receive:
-                        {   
+                        {
                             internalMsg = GetIncomingMessage();
 
                             internalMsg.Type = evt.data;
