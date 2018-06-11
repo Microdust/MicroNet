@@ -2,34 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MicroNet.Network
+namespace MicroNet.Network.NAT
 {
-    public unsafe struct RemoteConnection
+    public unsafe struct NATServerConnection
     {
         internal ENet.Peer* Peer;
-        internal IPEndPoint EndPoint;
 
         public uint ConnectionId
         {
             get { return Peer->incomingPeerID; }
-        }
-
-        public void SetRemote(RemoteConnection conn)
-        {
-            Peer = conn.Peer;
-
-        }
-
-
-
-        internal RemoteConnection(ENet.Peer* peer)
-        {
-            Peer = peer;       
-            EndPoint = new IPEndPoint(new IPAddress(peer->address.Host), peer->address.Port);
         }
 
         /// <summary>
@@ -39,7 +23,6 @@ namespace MicroNet.Network
         {
             get { return new IPAddress(Peer->address.Host); }
         }
-
 
         /// <summary>
         /// Returns the round trip time for the remote connection
@@ -62,28 +45,58 @@ namespace MicroNet.Network
         /// </summary>
         public void Ping()
         {
-            ENet.PingPeer(Peer);           
+            ENet.PingPeer(Peer);
         }
 
         /// <summary>
         /// Sends a message to a remote connection. Default channel = 0
         /// </summary>
-        public void Send(OutgoingMessage msg)
+        public void RegisterHosting(ushort port)
         {
-            fixed (byte* bytes = msg.Data)
+            OutgoingMessage regMessage = MessagePool.CreateMessage();
+            IPAddress local = NetUtilities.GetLocalAddress();
+
+            regMessage.Write(NATMessageType.INITIATE_HOST);            
+            regMessage.Write(new IPEndPoint(local, port));
+            regMessage.WriteString("hello");
+
+            fixed (byte* bytes = regMessage.Data)
             {
-                ENet.MicroSend(Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)regMessage.ByteCount, DeliveryMethod.Reliable);
             }
         }
 
         /// <summary>
         /// Sends a message to a remote connection
         /// </summary>
-        public void Send(OutgoingMessage msg, byte channelId)
+        public void RequestIntroduction(uint hostId, ushort port)
         {
-            fixed (byte* bytes = msg.Data)
+            OutgoingMessage request = MessagePool.CreateMessage();
+            IPAddress local = NetUtilities.GetLocalAddress();
+
+            request.Write(NATMessageType.REQUEST_INTRODUCTION);
+            request.Write(new IPEndPoint(local, port));
+            request.Write(hostId);
+            request.WriteString("hello");
+
+            fixed (byte* bytes = request.Data)
             {
-                ENet.MicroSend(Peer, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
+            }
+        }
+
+        /// <summary>
+        /// Sends a message to a remote connection
+        /// </summary>
+        public void InformPunchthroughSuccess()
+        {
+            OutgoingMessage request = MessagePool.CreateMessage();
+            IPAddress local = NetUtilities.GetLocalAddress();
+            request.Write(NATMessageType.NAT_PUNCH_SUCCESS);
+
+            fixed (byte* bytes = request.Data)
+            {
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
             }
         }
 
@@ -92,7 +105,7 @@ namespace MicroNet.Network
         /// </summary>
         public void Disconnect()
         {
-            ENet.DisconnectPeer(Peer, 1337);
+            ENet.DisconnectPeer(Peer, 1);
         }
 
         ///<summary>
@@ -118,6 +131,5 @@ namespace MicroNet.Network
         {
             return Peer->state;
         }
-
     }
 }

@@ -21,5 +21,7 @@ namespace MicroNet.Network
 
         public const int NAT_PUNCHTHROUGH = 512;
 
+        public const int NAT_PUNCH_SUCCESS = 1024;
+
     }
 }

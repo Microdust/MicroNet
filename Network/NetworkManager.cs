@@ -106,15 +106,36 @@ namespace MicroNet.Network
         {
             // Check if this technique actually works in anycase. Stay noted, this is prevent the obsolete IPv4 feature in .NET IPAdress
             // However, we cut away the IPv6 section - This is because ENet does not support IPv6.
-            uint value = BitConverter.ToUInt32(ipEndPoint.Address.GetAddressBytes(), 0);
-
+            // uint value = BitConverter.ToUInt32(ipEndPoint.Address.GetAddressBytes(), 0);         
             ENet.Address remoteAddr = new ENet.Address()
             {
-                Host = value, 
+                Host = (uint)ipEndPoint.Address.Address, 
                 Port = remoteAddr.Port = (ushort)ipEndPoint.Port,
             };
 
             ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+        }
+
+        public NAT.NATServerConnection ConnectToNATServer()
+        {
+            NAT.NATServerConnection server = new NAT.NATServerConnection();
+
+            if (config.ServerEndPoint == null)
+            {
+                Debug.Error(config.Name, ": Attempted to connect to a null server...");
+                return server;
+            }
+            
+
+            ENet.Address remoteAddr = new ENet.Address()
+            {
+                Host = (uint)config.ServerEndPoint.Address.Address,
+                Port = remoteAddr.Port = (ushort)config.ServerEndPoint.Port,
+            };
+
+            server.Peer = ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+
+            return server;
         }
 
 

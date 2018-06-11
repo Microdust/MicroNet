@@ -8,13 +8,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MicroNet.Network;
-
+using MicroNet.Network.NAT;
 
 namespace MicroNet
 {
     public unsafe class Program
     {
-      
+        private static byte[] localHost = { 127, 0, 0, 1 };
         private static bool isPooling = true;
         private static void Client()
         {
@@ -26,6 +26,7 @@ namespace MicroNet
                 Name = "Client",
                 Timeout = 1,
                 NetworkRate = 50
+                
             });
 
             host.Start();
@@ -74,7 +75,8 @@ namespace MicroNet
                 MaxConnections = 5,
                 Name = "NATClient",
                 Timeout = 1,
-                NetworkRate = 50
+                NetworkRate = 50,
+                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
             });
 
             host.Start();
@@ -97,7 +99,8 @@ namespace MicroNet
                 MaxConnections = 5,
                 Name = "NATHost",
                 Timeout = 1,
-                NetworkRate = 50
+                NetworkRate = 50,
+                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
             });
 
             host.Start();

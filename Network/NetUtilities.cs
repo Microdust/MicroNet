@@ -15,9 +15,19 @@ namespace MicroNet.Network
     {
         public static byte[] EmptyByteArray = new byte[255];
 
-
         public static NetSingle WriteSingle = new NetSingle();
         public static NetSingle ReadSingle = new NetSingle();
+
+
+        // Using Cantors function to create a unique identifier based on host external IP and port
+        public static uint CreateUniqueId(IPEndPoint point)
+        {
+            uint x = (uint)point.Address.Address;
+            ushort y = (ushort)point.Port;
+
+            return ((x + y) * (x + y + 1)) / 2 + y;
+        }
+
 
         public static IPAddress GetLocalAddress()
         {

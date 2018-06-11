@@ -5,20 +5,22 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MicroNet.Network
+namespace MicroNet.Network.NAT
 {
     public class NATServer : NetworkManager
     {
-        Dictionary<ulong, NatRemoteConnection> registeredHosts = new Dictionary<ulong, NatRemoteConnection>();
-
+        private Dictionary<ulong, NATHost> registeredHosts = new Dictionary<ulong, NATHost>();
+        
 
         public NATServer(NetConfiguration config, uint maxHostCount) : base(config)
         {
+            
         }
+
 
         public override void OnConnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, ": Established connection to: ", remote.IPAddress.ToString());
+            Debug.Log(config.Name, ": Established connection to: ", remote.IPAddress.ToString());         
         }
 
         public override void OnDisconnect(RemoteConnection remote)
@@ -37,12 +39,11 @@ namespace MicroNet.Network
             {
                 case NATMessageType.INITIATE_HOST :
                 Debug.Log(config.Name, ": Received host register request");
-                NatRemoteConnection natHost = new NatRemoteConnection();
+                NATHost natHost = new NATHost();
                 natHost.Initialize(msg);
-                registeredHosts.Add(natHost.HostingId, natHost);
-               // registeredHosts[natHost.HostingId] = natHost;
+                registeredHosts.Add(natHost.HostId, natHost);
 
-                Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.ExternalIp.ToString(), " and local IP: ", natHost.InternalIp.ToString(), " , hosting ID: ", natHost.HostingId.ToString());
+                Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.External.ToString(), " and local IP: ");
 
                 OutgoingMessage ackMsg = MessagePool.CreateMessage();
                 ackMsg.Write(NATMessageType.ACK);
@@ -56,19 +57,19 @@ namespace MicroNet.Network
                 break;
 
                 case NATMessageType.REQUEST_INTRODUCTION:
-                NatRemoteConnection client = new NatRemoteConnection();
+                NATClient client = new NATClient();
                 client.Initialize(msg);
 
                 //Local test           
                 byte[] addr = { 89, 233, 23, 45 };
-                client.ExternalIp.Address = new IPAddress(addr);
+                client.External.Address = new IPAddress(addr);
 
-                Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.ExternalIp.ToString(), " and local IP: ", client.InternalIp.ToString(), " with following hosting ID: ", client.HostingId.ToString());
+                Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.External.ToString(), " and local IP: ");
 
-                Debug.Log(config.Name, ": Received introduction request to hostId: ", client.HostingId.ToString(), " and with the password: ", client.Password);
+                Debug.Log(config.Name, ": Received introduction request to hostId: ", client.HostId.ToString());
 
-                NatRemoteConnection host;    
-                if (registeredHosts.TryGetValue(client.HostingId, out host))
+                NATHost host;    
+                if (registeredHosts.TryGetValue(client.HostId, out host))
                 {
                     Debug.Log(config.Name, ": Host was found... Sending introduction");
                     
@@ -79,12 +80,26 @@ namespace MicroNet.Network
                 }
 
                 break;
+
+                case NATMessageType.NAT_PUNCH_SUCCESS:
+                    HandleNatPunchSuccess(msg.Remote);
+                break;
             }
         }
 
         public override void OnStop()
         {
             Debug.Log(config.Name, ": Stopping...");
+        }
+
+        public void HandleNatPunchSuccess(RemoteConnection remote)
+        {
+            if (registeredHosts.Remove(NetUtilities.CreateUniqueId(remote.EndPoint)))
+            {
+                Debug.Log("Removed Host from list");
+            }
+
+            remote.Disconnect();                         
         }
 
 
@@ -98,7 +113,6 @@ namespace MicroNet.Network
 
 
         }
-
 
     }
 }

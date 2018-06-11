@@ -71,9 +71,14 @@ namespace MicroNet.Network
         public int MessagePoolSize = 32;
 
         /// <summary>
-        /// The number of channels to allocate for any default connection
+        /// The number of channels to allocate for any default connection.
         /// </summary>
         public byte DefaultChannelAmount = 4;
+
+        /// <summary>
+        /// The IPEndPoint for a hosted server. For example, a NAT Relay server.
+        /// </summary>
+        public IPEndPoint ServerEndPoint;
 
 
 
