@@ -110,11 +110,15 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Request for a list of hosts was received");
             OutgoingMessage listMsg = MessagePool.CreateMessage();
 
-            listMsg.Write(NATMessageType.REQUEST_HOST_LIST);
+            Debug.Log(listMsg.BitLength.ToString());
 
+            for (int i = 0; i < listMsg.Data.Length; i++)
+            {
+                Debug.Log(listMsg.Data[i].ToString());
+            }
+
+            listMsg.Write(NATMessageType.REQUEST_HOST_LIST);
             listMsg.Write(registeredHosts.Count);
-            listMsg.WriteString("Hello");
-            listMsg.Write(ulong.MaxValue);
 
             foreach(NATHost item in registeredHosts.Values)
             {

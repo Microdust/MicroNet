@@ -33,7 +33,7 @@ namespace MicroNet.Network
             }
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             
-            CheckAndBalance(8 + (bytes.Length * 8));
+            CheckAndBalance(16 + (bytes.Length * 8));
             WriteUInt16((ushort)bytes.Length);
 
             int bytesToSend = bytes.Length;
@@ -42,10 +42,12 @@ namespace MicroNet.Network
 
             int occupiedBits = (BitLength % 8);
 
+
+            BitLength += bytesToSend * 8;
             if (occupiedBits == 0)
             {
                 Buffer.BlockCopy(bytes, 0, Data, index, bytes.Length);
-                BitLength += bytesToSend * 8;
+
                 return;
             }
 
@@ -65,7 +67,7 @@ namespace MicroNet.Network
                 Data[index] &= (byte)(255 << occupiedBits); // clear before writing
                 Data[index] |= (byte)(src >> availableBits); // write second half
             }
-            BitLength += bytesToSend * 8;
+            
         }
 
 
