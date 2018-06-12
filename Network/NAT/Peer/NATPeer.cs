@@ -95,7 +95,6 @@ namespace MicroNet.Network.NAT
 
         internal void HandleGetHostList(IncomingMessage msg)
         {
-
             int count = msg.ReadInt32();
 
             Debug.Log(config.Name, " Received host list. The count was: ", count.ToString());
@@ -109,6 +108,8 @@ namespace MicroNet.Network.NAT
                 hosts.Add(hostInfo);
                 Debug.Log(hostInfo.HostId.ToString(), " , ", hostInfo.Title);
             }
+            // Test
+            relayServer.RequestIntroduction(hosts[0].HostId);
 
         }
     }

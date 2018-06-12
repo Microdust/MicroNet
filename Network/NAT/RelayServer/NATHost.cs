@@ -12,8 +12,7 @@ namespace MicroNet.Network.NAT
 
         public NATHost(IncomingMessage msg) : base(msg.Remote)
         {
-
-
+            Info.HostId = NetUtilities.CreateUniqueId(msg.Remote.EndPoint);
         }
     }
 }

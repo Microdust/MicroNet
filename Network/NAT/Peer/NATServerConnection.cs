@@ -109,12 +109,12 @@ namespace MicroNet.Network.NAT
         /// <summary>
         /// Sends a message to a remote connection
         /// </summary>
-        public void RequestIntroduction(NATHostInfo info)
+        public void RequestIntroduction(ulong hostId)
         {
             OutgoingMessage request = MessagePool.CreateMessage();
           //  IPAddress local = NetUtilities.GetLocalAddress();
             request.Write(NATMessageType.REQUEST_INTRODUCTION);
-            request.Write(info.HostId);
+            request.Write(hostId);
 
 
             fixed (byte* bytes = request.Data)
