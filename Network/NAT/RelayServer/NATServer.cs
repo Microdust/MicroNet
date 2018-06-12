@@ -65,7 +65,8 @@ namespace MicroNet.Network.NAT
         {
             Debug.Log(config.Name, ": Received host register request");
             NATHost natHost = new NATHost(msg);
-            registeredHosts.Add(NetUtilities.CreateUniqueId(natHost.Remote.EndPoint), natHost);
+            Debug.Log(config.Name, ": Adding host as id: ", natHost.Info.HostId.ToString());
+            registeredHosts.Add(natHost.Info.HostId, natHost);
 
             Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.Remote.EndPoint.ToString());
 
@@ -85,7 +86,7 @@ namespace MicroNet.Network.NAT
             ulong hostId = msg.ReadUInt64();
 
             Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.Remote.EndPoint.ToString(), " and local IP: ");
-            Debug.Log(config.Name, ": Received introduction request to hostId: ", client.ToString());
+            Debug.Log(config.Name, ": Received introduction request to hostId: ", hostId.ToString());
 
             if (registeredHosts.TryGetValue(hostId, out NATHost host))
             {
@@ -108,13 +109,18 @@ namespace MicroNet.Network.NAT
         {
             Debug.Log(config.Name, ": Request for a list of hosts was received");
             OutgoingMessage listMsg = MessagePool.CreateMessage();
+
             listMsg.Write(NATMessageType.REQUEST_HOST_LIST);
+
             listMsg.Write(registeredHosts.Count);
+            listMsg.WriteString("Hello");
+            listMsg.Write(ulong.MaxValue);
 
             foreach(NATHost item in registeredHosts.Values)
             {
                 item.Info.WriteMessage(listMsg);
             }
+       
 
             remote.Send(listMsg);
 
