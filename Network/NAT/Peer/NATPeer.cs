@@ -89,8 +89,10 @@ namespace MicroNet.Network.NAT
 
             Debug.Log(config.Name, ": was introduced to external IP: ", remoteExternal.ToString(), " and the password: ", Password);
 
-            NATPunching(remoteExternal);
-
+            if(!config.AllowConnectors)
+            {
+                NATPunching(remoteExternal);
+            }
         }
 
         internal void HandleGetHostList(IncomingMessage msg)

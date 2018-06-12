@@ -19,14 +19,14 @@ namespace MicroNet.Network.NAT
 
         public void ReadMessage(IncomingMessage msg)
         {
-            HostId = msg.ReadUInt64();
-            Title = msg.ReadString();
+       //     Title = msg.ReadString();
+            HostId = msg.ReadUInt64();          
         }
 
         public void WriteMessage(OutgoingMessage msg)
         {
+   //         msg.WriteString(Title);
             msg.Write(HostId);
-            msg.WriteString(Title);
         }
 
     }

@@ -171,7 +171,7 @@ namespace MicroNet.Network
         internal void NATPunching(IPEndPoint addr)
         {
             ENet.Address address = new ENet.Address();
-            address.Port = (ushort)addr.Port;
+            address.Port = (ushort)config.Port;
             string strAddr = addr.Address.ToString();
 
             if (ENet.AddressSetHost(ref address, Encoding.ASCII.GetBytes(strAddr)) != 0)
@@ -179,8 +179,10 @@ namespace MicroNet.Network
                 Debug.Log(config.Name, " Failed to resolve host name");
             }
 
-            Debug.Log(config.Name, " Punching: ", address.Host.ToString(), " : ", address.Port.ToString());
+            Debug.Log(config.Name, " Punching: ", addr.Address.ToString(), " : ", address.Port.ToString());
 
+            ENet.Connect(host, ref address, (IntPtr)config.DefaultChannelAmount);
+            /*
             fixed (byte* bytes = msg.Data)
             {
                 for (int i = 0; i < 8; i++)
@@ -205,6 +207,7 @@ namespace MicroNet.Network
                     }
                 }
             }
+            */
 
         }
 
