@@ -61,14 +61,29 @@ namespace MicroNet.Network
         public int NetworkRate = 50;
 
         /// <summary>
-        /// The allocated size of the message buffer. If the buffer size exceeds it will resize the array which is performance-heavy.
+        /// The allocated size of the incoming message buffer. If the buffer size exceeds it will resize the array which is performance-heavy.
         /// </summary>
-        public int MessageBufferSize = 128;
+        public int IncomingBufferSize = 64;
 
         /// <summary>
-        /// The amount of allocated messages in the message pool. NOTICE: This number must be power of two.
+        /// The allocated size of the outgoing message buffer. If the buffer size exceeds it will resize the array which is performance-heavy.
         /// </summary>
-        public int MessagePoolSize = 32;
+        public int OutgoingBufferSize = 64;
+
+        /// <summary>
+        /// The amount of allocated incoming messages in the message pool. NOTICE: This number must be power of two.
+        /// </summary>
+        public int IncomingMessagePoolSize = 32;
+
+        /// <summary>
+        /// The amount of allocated outgoing messages in the message pool. NOTICE: This number must be power of two.
+        /// </summary>
+        public int OutgoingMessagePoolSize = 32;
+
+        /// <summary>
+        /// The amount of allocated connections in the connection pool. NOTICE: This number must be power of two.
+        /// </summary>
+        public int ConnectionPoolSize = 4;
 
         /// <summary>
         /// The number of channels to allocate for any default connection.
@@ -79,6 +94,8 @@ namespace MicroNet.Network
         /// The IPEndPoint for a hosted server. For example, a NAT Relay server.
         /// </summary>
         public IPEndPoint ServerEndPoint;
+
+
 
 
 

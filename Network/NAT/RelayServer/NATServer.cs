@@ -20,12 +20,12 @@ namespace MicroNet.Network.NAT
 
         public override void OnConnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, ": Established connection to: ", remote.IPAddress.ToString());         
+            Debug.Log(config.Name, ": Established connection to: ", remote.EndPoint.ToString());         
         }
 
         public override void OnDisconnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, ": Disconnected from: ", remote.IPAddress.ToString());
+            Debug.Log(config.Name, ": Disconnected from: ", remote.EndPoint.ToString());
         }
 
         public override void OnReady()
@@ -37,52 +37,20 @@ namespace MicroNet.Network.NAT
         {
             switch(msg.ReadUInt32())
             {
-                case NATMessageType.INITIATE_HOST :
-                Debug.Log(config.Name, ": Received host register request");
-                NATHost natHost = new NATHost();
-                natHost.Initialize(msg);
-                registeredHosts.Add(natHost.HostId, natHost);
-
-                Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.External.ToString(), " and local IP: ");
-
-                OutgoingMessage ackMsg = MessagePool.CreateMessage();
-                ackMsg.Write(NATMessageType.ACK);
-                msg.Remote.Send(ackMsg);
-
+                case NATMessageType.INITIATE_HOST:
+                HandleHostSetup(msg);
                 break;
 
-                case NATMessageType.GET_HOST_LIST:
-                Debug.Log(config.Name, ": Request for a list of hosts was received");
-
+                case NATMessageType.REQUEST_HOST_LIST:
+                HandleHostListRequest(msg.Remote);               
                 break;
 
                 case NATMessageType.REQUEST_INTRODUCTION:
-                NATClient client = new NATClient();
-                client.Initialize(msg);
-
-                //Local test           
-                byte[] addr = { 89, 233, 23, 45 };
-                client.External.Address = new IPAddress(addr);
-
-                Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.External.ToString(), " and local IP: ");
-
-                Debug.Log(config.Name, ": Received introduction request to hostId: ", client.HostId.ToString());
-
-                NATHost host;    
-                if (registeredHosts.TryGetValue(client.HostId, out host))
-                {
-                    Debug.Log(config.Name, ": Host was found... Sending introduction");
-                    
-
-                    host.Introduce(client);
-                    client.Introduce(host);
-
-                }
-
+                HandleIntroductionRequest(msg);
                 break;
 
                 case NATMessageType.NAT_PUNCH_SUCCESS:
-                    HandleNatPunchSuccess(msg.Remote);
+                HandleNatPunchSuccess(msg.Remote);
                 break;
             }
         }
@@ -92,27 +60,78 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Stopping...");
         }
 
+
+        public void HandleHostSetup(IncomingMessage msg)
+        {
+            Debug.Log(config.Name, ": Received host register request");
+            NATHost natHost = new NATHost(msg);
+            registeredHosts.Add(NetUtilities.CreateUniqueId(natHost.Remote.EndPoint), natHost);
+
+            Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.Remote.EndPoint.ToString());
+
+            OutgoingMessage ackMsg = MessagePool.CreateMessage();
+            ackMsg.Write(NATMessageType.ACK);
+            msg.Remote.Send(ackMsg);
+        }
+
+        public void HandleIntroductionRequest(IncomingMessage msg)
+        {
+            NATRemote client = new NATRemote(msg.Remote);
+
+            //Local test           
+            byte[] addr = { 89, 233, 23, 45 };
+            client.Remote.EndPoint.Address = new IPAddress(addr); // Temp
+
+            ulong hostId = msg.ReadUInt64();
+
+            Debug.Log(config.Name, ": Client requested introduction as: External IP: ", client.Remote.EndPoint.ToString(), " and local IP: ");
+            Debug.Log(config.Name, ": Received introduction request to hostId: ", client.ToString());
+
+            if (registeredHosts.TryGetValue(hostId, out NATHost host))
+            {
+                Debug.Log(config.Name, ": Host was found... Sending introduction");
+
+                host.Introduce(client);
+                client.Introduce(host);
+            }
+        }
+
+
         public void HandleNatPunchSuccess(RemoteConnection remote)
         {
-            if (registeredHosts.Remove(NetUtilities.CreateUniqueId(remote.EndPoint)))
-            {
-                Debug.Log("Removed Host from list");
-            }
+                Debug.Log(config.Name, ": Received Punch Success");
 
             remote.Disconnect();                         
         }
 
-
-
-        /// <summary>
-        /// Called when host/client receives a NatIntroduction message from a master server
-        /// </summary>
-        internal void HandleNatIntroduction(int ptr)
+        public void HandleHostListRequest(RemoteConnection remote)
         {
+            Debug.Log(config.Name, ": Request for a list of hosts was received");
+            OutgoingMessage listMsg = MessagePool.CreateMessage();
+            listMsg.Write(NATMessageType.REQUEST_HOST_LIST);
+            listMsg.Write(registeredHosts.Count);
 
+            for (int i = 0; i < registeredHosts.Count; i++)
+            {
+                ulong index = (ulong)i;
+                registeredHosts[index].Info.WriteMessage(listMsg);
+            }
 
+            remote.Send(listMsg);
 
         }
+
+        private void Introduce(RemoteConnection remote , IPEndPoint endPoint)
+        {
+            Debug.Log("NATServer: Introducing: ", endPoint.ToString(), " to: ", remote.EndPoint.ToString());
+            OutgoingMessage message = MessagePool.CreateMessage();
+            message.Write(NATMessageType.INTRODUCTION);
+            message.Write(endPoint);
+            remote.Send(message);
+
+            MessagePool.Recycle(message);
+        }
+
 
     }
 }

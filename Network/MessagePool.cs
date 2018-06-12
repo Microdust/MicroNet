@@ -8,83 +8,112 @@ namespace MicroNet.Network
 {
     public static class MessagePool
     {
-        private static OutgoingMessage[] messagePool;
-        private static int headPool;       // First valid element in the queue
-        private static int tailPool;       // Last valid element in the queue
-        private static int sizePool;       // Number of elements.
-        private static readonly int growFactorPool = 2;
+        private static Stack<OutgoingMessage> messagePool;
 
-        private static int minSize;
 
-        public static void InitializePool(int capacity, int minimumByte)
+        public static void InitializOutgoingPool(int capacity, int bufferSize)
         {
-            if ((capacity & (capacity - 1)) == 0)
-            {
-                messagePool = new OutgoingMessage[capacity];
-            }
-            else
-            {
-                Debug.Error("MessagePool capacity value is not power of two. Defaults to 16");
-                messagePool = new OutgoingMessage[16];
-            }
-            minSize = minimumByte;
+            messagePool = new Stack<OutgoingMessage>(capacity);
 
-            headPool = 0;
-            tailPool = 0;
-            sizePool = 0;
-
-            for (int i = 0; i < messagePool.Length; i++)
+            for (int i = 0; i < capacity; i++)
             {
-                messagePool[i] = new OutgoingMessage(minSize);
+                messagePool.Push(new OutgoingMessage(bufferSize));
             }
+        }
 
+        public static void Recycle(OutgoingMessage msg)
+        {
+            msg.Recycle();
+            messagePool.Push(msg);
         }
 
         public static OutgoingMessage CreateMessage()
         {
-            if (sizePool == 0)
-                return new OutgoingMessage(minSize);
-
-            OutgoingMessage removed = messagePool[headPool];
-            messagePool[headPool] = null;
-            headPool = (headPool + 1) & (messagePool.Length - 1); // power of two
-            sizePool--;
-            return removed;
+            return messagePool.Pop();
         }
 
-        /// <summary>
-        /// Recycle an 'IncomingMessage' by returning it to the internal message pool
-        /// </summary>
-        public static void Recycle(OutgoingMessage msg)
+
+
+
+        /*
+    private static OutgoingMessage[] messagePool;
+    private static int headPool;       // First valid element in the queue
+    private static int tailPool;       // Last valid element in the queue
+    private static int sizePool;       // Number of elements.
+    private static readonly int growFactorPool = 2;
+
+    private static int minSize;
+
+    public static void InitializePool(int capacity, int minimumByte)
+    {
+        if ((capacity & (capacity - 1)) == 0)
         {
-            if (sizePool == messagePool.Length)
-            {
-                int newLength = messagePool.Length * growFactorPool;
-                OutgoingMessage[] tempArray = new OutgoingMessage[newLength];
-                if (sizePool > 0)
-                {
-                    if (headPool < tailPool)
-                    {
-                        Array.Copy(messagePool, headPool, tempArray, 0, sizePool);
-                    }
-                    else
-                    {
-                        Array.Copy(messagePool, headPool, tempArray, 0, messagePool.Length - headPool);
-                        Array.Copy(messagePool, 0, tempArray, messagePool.Length - headPool, tailPool);
-                    }
-                }
-                messagePool = tempArray;
-                headPool = 0;
-                tailPool = (sizePool == newLength) ? 0 : sizePool;
-            }
-
-            msg.Recycle();
-
-            messagePool[tailPool] = msg;
-            tailPool = (tailPool + 1) & (messagePool.Length - 1); // Power of two
-            sizePool++;
-
+            messagePool = new OutgoingMessage[capacity];
         }
+        else
+        {
+            Debug.Error("MessagePool capacity value is not power of two. Defaults to 16");
+            messagePool = new OutgoingMessage[16];
+        }
+        minSize = minimumByte;
+
+        headPool = 0;
+        tailPool = 0;
+        sizePool = messagePool.Length;
+
+        for (int i = 0; i < sizePool; i++)
+        {
+            messagePool[i] = new OutgoingMessage(minSize);
+        }
+
+    }
+
+    public static OutgoingMessage CreateMessage()
+    {
+        if (sizePool == 0)
+            return new OutgoingMessage(minSize);
+
+        OutgoingMessage removed = messagePool[headPool];
+        messagePool[headPool] = null;
+        headPool = (headPool + 1) & (messagePool.Length - 1); // power of two
+        sizePool--;
+        return removed;
+    }
+
+    /// <summary>
+    /// Recycle an 'IncomingMessage' by returning it to the internal message pool
+    /// </summary>
+    public static void Recycle(OutgoingMessage msg)
+    {
+        if (sizePool == messagePool.Length)
+        {
+            int newLength = messagePool.Length * growFactorPool;
+            OutgoingMessage[] tempArray = new OutgoingMessage[newLength];
+            if (sizePool > 0)
+            {
+                if (headPool < tailPool)
+                {
+                    Array.Copy(messagePool, headPool, tempArray, 0, sizePool);
+                }
+                else
+                {
+                    Array.Copy(messagePool, headPool, tempArray, 0, messagePool.Length - headPool);
+                    Array.Copy(messagePool, 0, tempArray, messagePool.Length - headPool, tailPool);
+                }
+            }
+            messagePool = tempArray;
+            headPool = 0;
+            tailPool = (sizePool == newLength) ? 0 : sizePool;
+        }
+
+        msg.Recycle();
+
+        messagePool[tailPool] = msg;
+        tailPool = (tailPool + 1) & (messagePool.Length - 1); // Power of two
+        sizePool++;
+
+    }
+    */
 
     }
 }

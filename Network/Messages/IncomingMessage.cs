@@ -11,17 +11,17 @@ namespace MicroNet.Network
     {
 
         public EventMessage Event;
-        public RemoteConnection Remote = new RemoteConnection();
+        //     public RemoteConnection Remote = new RemoteConnection();
+        public RemoteConnection Remote;
         internal int BitLocation = 0;
 
         public IncomingMessage(int byteSize) : base(byteSize) { }
 
         internal void Reset()
         {
-            Type = 0;
             BitLocation = 0;
             BitLength = 0;
-
+            Remote = null;
         }
         
     }

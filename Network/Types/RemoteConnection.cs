@@ -8,36 +8,38 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public unsafe struct RemoteConnection
+    public unsafe class RemoteConnection
     {
         internal ENet.Peer* Peer;
-        internal IPEndPoint EndPoint;
+        internal IPEndPoint EndPoint = new IPEndPoint(0, 0);
+
+        internal void Initialize(ENet.Peer* peer)
+        {
+            Peer = peer;
+            EndPoint.Address.Address = Peer->address.Host;
+            EndPoint.Port = Peer->address.Port;
+        }
+
+        public RemoteConnection()
+        { }
+
+        internal RemoteConnection(ENet.Peer* peer)
+        {
+            Peer = peer;
+            EndPoint = new IPEndPoint(Peer->address.Host, Peer->address.Port);
+        }
 
         public uint ConnectionId
         {
             get { return Peer->incomingPeerID; }
         }
 
-        public void SetRemote(RemoteConnection conn)
-        {
-            Peer = conn.Peer;
-
-        }
-
-
-
-        internal RemoteConnection(ENet.Peer* peer)
-        {
-            Peer = peer;       
-            EndPoint = new IPEndPoint(new IPAddress(peer->address.Host), peer->address.Port);
-        }
-
         /// <summary>
         /// Returns the IP address of the remote connection
         /// </summary>
-        public IPAddress IPAddress
+        public IPEndPoint IpEndPoint
         {
-            get { return new IPAddress(Peer->address.Host); }
+            get { return EndPoint; }
         }
 
 

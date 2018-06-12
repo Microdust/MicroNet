@@ -141,11 +141,11 @@
     <Compile Include="Network\ENet\ENet.Types.cs" />
     <Compile Include="Network\MessagePool.cs" />
     <Compile Include="Network\LocalHost.cs" />
-    <Compile Include="Network\NAT\RelayServer\NATClient.cs" />
     <Compile Include="Network\NAT\RelayServer\NATHost.cs" />
+    <Compile Include="Network\NAT\RelayServer\NATHostInfo.cs" />
     <Compile Include="Network\NAT\NATMessageType.cs" />
     <Compile Include="Network\NAT\Peer\NATPeer.cs" />
-    <Compile Include="Network\NAT\RelayServer\NATRemoteBase.cs" />
+    <Compile Include="Network\NAT\RelayServer\NATRemote.cs" />
     <Compile Include="Network\NAT\RelayServer\NATServer.cs" />
     <Compile Include="Network\NAT\Peer\NATServerConnection.cs" />
     <Compile Include="Network\NetUtilities.cs" />

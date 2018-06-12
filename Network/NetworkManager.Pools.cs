@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +7,55 @@ using System.Threading.Tasks;
 
 namespace MicroNet.Network
 {
-    public partial class NetworkManager
+    public unsafe partial class NetworkManager
     {
+        private ConcurrentBag<IncomingMessage> incomingPool;
+        private Stack<RemoteConnection> connectionPool;
+
+        public void InitializePools()
+        {
+            MessagePool.InitializOutgoingPool(config.OutgoingMessagePoolSize, config.OutgoingBufferSize);
+            incomingPool = new ConcurrentBag<IncomingMessage>();
+            connectionPool = new Stack<RemoteConnection>(config.ConnectionPoolSize);
+
+            for (int i = 0; i < config.OutgoingMessagePoolSize; i++)
+            {
+                incomingPool.Add(new IncomingMessage(config.IncomingBufferSize));
+            }
+
+            for (int i = 0; i < config.ConnectionPoolSize; i++)
+            {
+                connectionPool.Push(new RemoteConnection());
+            }
+
+        }
+
+        private void Recycle(IncomingMessage msg)
+        {
+            msg.Reset();
+            incomingPool.Add(msg);
+        }
+
+        private void Recycle(RemoteConnection remote)
+        {
+            remote.Reset();
+            connectionPool.Push(remote);
+        }
+
+        private IncomingMessage GetIncomingMessage()
+        {
+            incomingPool.TryTake(out IncomingMessage msg);
+            return msg;
+        }
+
+        private RemoteConnection GetRemoteConnection(ENet.Peer* peer)
+        {
+            RemoteConnection remote = connectionPool.Pop();
+            remote.Initialize(peer);
+            return remote;
+        }
+
+        /*
         private IncomingMessage[] messagePool;
         private int headPool;       // First valid element in the queue
         private int tailPool;       // Last valid element in the queue
@@ -28,9 +76,9 @@ namespace MicroNet.Network
 
             headPool = 0;
             tailPool = 0;
-            sizePool = 0;
+            sizePool = messagePool.Length;
 
-            for (int i = 0; i < messagePool.Length; i++)
+            for (int i = 0; i < sizePool; i++)
             {
                 messagePool[i] = new IncomingMessage(config.MessageBufferSize);
             }
@@ -39,7 +87,7 @@ namespace MicroNet.Network
 
         public IncomingMessage GetIncomingMessage()
         {
-            if (sizePool == 0)
+            if (sizePool == -1)
                 return new IncomingMessage(config.MessageBufferSize);
 
             IncomingMessage removed = messagePool[headPool];
@@ -82,6 +130,6 @@ namespace MicroNet.Network
             sizePool++;
 
         }
-
+        */
     }
 }

@@ -14,7 +14,9 @@ namespace MicroNet
 {
     public unsafe class Program
     {
+        private static byte[] remoteNin = { 80, 60, 202, 28 };
         private static byte[] localHost = { 127, 0, 0, 1 };
+        private static byte[] myHost = { 89, 233, 23,45 };
         private static bool isPooling = true;
         private static void Client()
         {
@@ -76,7 +78,7 @@ namespace MicroNet
                 Name = "NATClient",
                 Timeout = 1,
                 NetworkRate = 50,
-                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
+                ServerEndPoint = new IPEndPoint(new IPAddress(myHost), 5000)
             });
 
             host.Start();
@@ -100,7 +102,7 @@ namespace MicroNet
                 Name = "NATHost",
                 Timeout = 1,
                 NetworkRate = 50,
-                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
+                ServerEndPoint = new IPEndPoint(new IPAddress(myHost), 5000)
             });
 
             host.Start();
@@ -141,14 +143,20 @@ namespace MicroNet
 
         public static void Main(string[] args)
         {
-
-
             /*
+            var server = new Thread(Server);
+            server.Start();
+            Thread.Sleep(100);
+            server.Join();
+            */
+
+         
             bool isRunning = true;
 
    
             while(isRunning)
             {
+                Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
                 ConsoleKeyInfo key = Console.ReadKey();
                 Console.WriteLine();
                 if (key.Key == ConsoleKey.D1)
@@ -172,23 +180,23 @@ namespace MicroNet
                 else
                 {
                     Console.WriteLine("Wrong key input, please try again...");
-                    Console.WriteLine("1 for hosting relay\n2 for hosting NAT\n3 for client");
                 }
             }
-            */
+   
 
-          
+  /*
+              var server = new Thread(NATServer);
+              server.Start();
+              Thread.Sleep(100);
 
-            var server = new Thread(NATServer);
-            server.Start();
-            Thread.Sleep(100);
 
+              Thread[] clients = new Thread[2];
+              clients[1] = new Thread(NATClient);
+              clients[1].Start();
 
-            Thread[] clients = new Thread[2];
-            clients[1] = new Thread(NATHost);
-            clients[1].Start();
-
-            server.Join();
+              server.Join();
+              */
+       
 
             //            clients[0] = new Thread(NATClient);
 

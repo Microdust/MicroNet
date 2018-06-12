@@ -12,6 +12,7 @@ namespace MicroNet.Network.NAT
     public partial class NATPeer : NetworkManager
     {
         private NATServerConnection relayServer;
+        private List<NATHostInfo> hosts = new List<NATHostInfo>();
 
 
         public NATPeer(NetConfiguration config) : base(config)
@@ -20,21 +21,22 @@ namespace MicroNet.Network.NAT
 
         public override void OnConnect(RemoteConnection remote)
         {
-            Debug.Log(config.Name, " Connected to: ", remote.IPAddress.ToString());
+            Console.WriteLine("A connection was established");
             
-            if(config.Name == "NATHost")
+            if (config.AllowConnectors)
             {
-                relayServer.RegisterHosting(config.Port);
+                relayServer.RegisterHosting();
             }
             else
             {
-                relayServer.RequestIntroduction(0, 0);
+                relayServer.RequestHostList();
             }
+
         }
 
         public override void OnDisconnect(RemoteConnection remote)
         {
-            Debug.Log("Disconnected from: ", remote.IPAddress.ToString());
+            Debug.Log("Disconnected from: ", remote.EndPoint.ToString());
         }
 
         public override void OnReady()
@@ -42,7 +44,8 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Connecting to NAT relay server...");
 
 
-            relayServer = ConnectToNATServer();
+            relayServer = GetNATServerConnection();
+            relayServer.Connect();
 
         }
 
@@ -58,8 +61,8 @@ namespace MicroNet.Network.NAT
                 HandleNatIntroduction(msg);
                 break;
 
-                case NATMessageType.NAT_PUNCHTHROUGH:
-                Debug.Log(config.Name, ": NAT PUNCH THROUGH...");
+                case NATMessageType.REQUEST_HOST_LIST:
+                HandleGetHostList(msg);
                 break;
 
             }
@@ -90,5 +93,24 @@ namespace MicroNet.Network.NAT
 
         }
 
+        internal void HandleGetHostList(IncomingMessage msg)
+        {
+
+            int count = msg.ReadInt32();
+
+            Debug.Log(config.Name, " Received host list. The count was: ", count.ToString());
+
+            for (int i = 0; i < count; i++)
+            {
+                NATHostInfo hostInfo = new NATHostInfo();
+
+                hostInfo.HostId = msg.ReadUInt64();
+                hostInfo.Title = msg.ReadString();
+
+                hosts.Add(hostInfo);
+                Debug.Log(hostInfo.HostId.ToString(), " , ", hostInfo.Title);
+            }
+
+        }
     }
 }

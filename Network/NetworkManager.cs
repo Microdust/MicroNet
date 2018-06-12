@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MicroNet.Network.NAT;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -17,9 +18,9 @@ namespace MicroNet.Network
 
         private Thread networkThread;
         private bool isRunning;
-        private ENet.Host* ENetHost;
+        private ENet.Host* host;
 
-        private ENet.Peer*[] connections;
+        private RemoteConnection[] remotes;
 
         private IncomingMessage msg;
 
@@ -36,6 +37,11 @@ namespace MicroNet.Network
             
         }
 
+        public NATServerConnection GetNATServerConnection()
+        {
+            return new NATServerConnection(host, config.ServerEndPoint);
+        }
+
         public void Start()
         {
             networkThread.Start();
@@ -50,11 +56,10 @@ namespace MicroNet.Network
         {
             ENet.Initialize();
 
-            InitializePools(config.MessagePoolSize);
-            InitializeQueues(config.MessageBufferSize);
-            MessagePool.InitializePool(config.MessagePoolSize, config.MessageBufferSize);
+            InitializePools();
+            InitializeQueues(config.IncomingBufferSize);           
 
-            connections = new ENet.Peer*[config.MaxConnections];
+            remotes = new RemoteConnection[config.MaxConnections];
 
             if (config.AllowConnectors)
             {
@@ -63,15 +68,15 @@ namespace MicroNet.Network
 
 
                 ENet.AddressSetHost(ref address, config.LocalAddress);
-                ENetHost = ENet.CreateHost(ref address, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
+                host = ENet.CreateHost(ref address, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
             }
             else
             {
-                ENetHost = ENet.CreateHost(null, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
+                host = ENet.CreateHost(null, (IntPtr)config.MaxConnections, (IntPtr)config.MaxConnections, config.IncomingBandwidth, config.OutgoingBandwidth, config.AppIdentification);
 
             }
 
-            if (ENetHost == null)
+            if (host == null)
             {
                 Debug.Error(config.Name, ": Failed to create host");
                 return;
@@ -95,7 +100,7 @@ namespace MicroNet.Network
             remoteAddr.Port = port;
             ENet.AddressSetHost(ref remoteAddr, Encoding.ASCII.GetBytes(address));
 
-            ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+            ENet.Connect(host, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
         }
 
 
@@ -113,30 +118,9 @@ namespace MicroNet.Network
                 Port = remoteAddr.Port = (ushort)ipEndPoint.Port,
             };
 
-            ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
+            ENet.Connect(host, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
         }
 
-        public NAT.NATServerConnection ConnectToNATServer()
-        {
-            NAT.NATServerConnection server = new NAT.NATServerConnection();
-
-            if (config.ServerEndPoint == null)
-            {
-                Debug.Error(config.Name, ": Attempted to connect to a null server...");
-                return server;
-            }
-            
-
-            ENet.Address remoteAddr = new ENet.Address()
-            {
-                Host = (uint)config.ServerEndPoint.Address.Address,
-                Port = remoteAddr.Port = (ushort)config.ServerEndPoint.Port,
-            };
-
-            server.Peer = ENet.Connect(ENetHost, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
-
-            return server;
-        }
 
 
         /// <summary>
@@ -146,7 +130,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroBroadcast(ENetHost, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroBroadcast(host, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -157,7 +141,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroBroadcast(ENetHost, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroBroadcast(host, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -168,7 +152,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(connections[connectionId], channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(remotes[connectionId].Peer, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -179,7 +163,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(connections[connectionId], 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(remotes[connectionId].Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -201,14 +185,14 @@ namespace MicroNet.Network
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
+                    ENet.MicroSocketSend(host, ref address, bytes, (IntPtr)msg.ByteCount);
                     Thread.Sleep(5);
                 }
             }
 
             if (!config.AllowConnectors)
             {
-                ENet.Connect(ENetHost, ref address, (IntPtr)config.DefaultChannelAmount);
+                ENet.Connect(host, ref address, (IntPtr)config.DefaultChannelAmount);
             }
             else
             {
@@ -216,7 +200,7 @@ namespace MicroNet.Network
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        ENet.MicroSocketSend(ENetHost, ref address, bytes, (IntPtr)msg.ByteCount);
+                        ENet.MicroSocketSend(host, ref address, bytes, (IntPtr)msg.ByteCount);
                         Thread.Sleep(5);
                     }
                 }
@@ -226,24 +210,24 @@ namespace MicroNet.Network
 
         public void Disconnect(uint connectionId, uint flag)
         {
-            if (connectionId > connections.Length)
+            if (connectionId > remotes.Length)
             {
                 Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
                 return;
             }
 
-            ENet.DisconnectPeer(connections[connectionId], flag);
+            ENet.DisconnectPeer(remotes[connectionId].Peer, flag);
         }
 
         public void Disconnect(uint connectionId)
         {
-            if (connectionId > connections.Length)
+            if (connectionId > remotes.Length)
             {
                 Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
                 return;
             }
 
-            ENet.DisconnectPeer(connections[connectionId], 0);
+            ENet.DisconnectPeer(remotes[connectionId].Peer, 0);
         }
 
         public abstract void OnConnect(RemoteConnection remote);
@@ -303,19 +287,18 @@ namespace MicroNet.Network
             while (isRunning)
             {
 
-                if (ENet.Service(ENetHost, out evt, serviceWait) > 0)
+                if (ENet.Service(host, out evt, serviceWait) > 0)
                 {
                     switch (evt.type)
                     {
                         case EventMessage.Connect:
                         {
-                            connections[evt.peer->incomingPeerID] = evt.peer;
-
                             internalMsg = GetIncomingMessage();
-                            
-                            internalMsg.Event = evt.type;
-                            internalMsg.Remote.Peer = evt.peer;
 
+                            internalMsg.Remote = remotes[evt.peer->incomingPeerID] = GetRemoteConnection(evt.peer);
+                                           
+                            internalMsg.Event = evt.type;
+                           
                             IncomingEnqueue(internalMsg);
 
                             connectionCount++;
@@ -323,14 +306,10 @@ namespace MicroNet.Network
                         }
                         case EventMessage.Disconnect:
                         {
-                            connections[evt.peer->incomingPeerID] = evt.peer;
-
                             internalMsg = GetIncomingMessage();
 
-                            internalMsg.Type = evt.data;
-
                             internalMsg.Event = evt.type;
-                            internalMsg.Remote.Peer = evt.peer;
+                            internalMsg.Remote = remotes[evt.peer->incomingPeerID];
 
                             IncomingEnqueue(internalMsg);
 
@@ -343,7 +322,8 @@ namespace MicroNet.Network
 
                             internalMsg.Type = evt.data;
                             internalMsg.Event = evt.type;
-                            internalMsg.Remote.Peer = evt.peer;
+
+                            internalMsg.Remote = remotes[evt.peer->incomingPeerID];
 
                             int length = (int)evt.packet->dataLength;
 
@@ -365,9 +345,9 @@ namespace MicroNet.Network
                 Thread.Sleep(sleepTime);
             }
 
-            ENet.DestroyHost(ENetHost);
-            connections = null;
-            ENetHost = null;
+            ENet.DestroyHost(host);
+            remotes = null;
+            host = null;
 
             IncomingMessage stoppedEvent = GetIncomingMessage();
             stoppedEvent.Event = EventMessage.NetworkStopped;

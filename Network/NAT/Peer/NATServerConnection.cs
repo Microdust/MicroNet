@@ -10,18 +10,41 @@ namespace MicroNet.Network.NAT
     public unsafe struct NATServerConnection
     {
         internal ENet.Peer* Peer;
+        private ENet.Host* Host;
+        private IPEndPoint endPoint;
 
+        internal NATServerConnection(ENet.Host* host, IPEndPoint target)
+        {
+            Host = host;
+            endPoint = target;
+            Peer = null;
+        }
+
+        public bool IsConnected
+        {
+            get
+            {
+                return Peer->state == Network.ConnectionState.Connected;
+            }
+        }
+
+   
         public uint ConnectionId
         {
             get { return Peer->incomingPeerID; }
         }
 
         /// <summary>
-        /// Returns the IP address of the remote connection
+        /// Returns the IPEndPoint of the remote NAT Server
         /// </summary>
-        public IPAddress IPAddress
+        public IPEndPoint EndPoint
         {
-            get { return new IPAddress(Peer->address.Host); }
+            get
+            {
+                endPoint.Address.Address = Peer->address.Host;
+                endPoint.Port = Peer->address.Port;
+                return endPoint;
+            }
         }
 
         /// <summary>
@@ -40,6 +63,7 @@ namespace MicroNet.Network.NAT
             get { return Peer->lastSendTime; }
         }
 
+
         /// <summary>
         /// Force an additional ping to a remote connection 
         /// </summary>
@@ -48,16 +72,32 @@ namespace MicroNet.Network.NAT
             ENet.PingPeer(Peer);
         }
 
+
         /// <summary>
         /// Sends a message to a remote connection. Default channel = 0
         /// </summary>
-        public void RegisterHosting(ushort port)
+        public void RequestHostList()
+        {
+            OutgoingMessage regMessage = MessagePool.CreateMessage();
+            regMessage.Write(NATMessageType.REQUEST_HOST_LIST);
+            
+
+            fixed (byte* bytes = regMessage.Data)
+            {
+                ENet.MicroSend(Peer, 0, bytes, (IntPtr)regMessage.ByteCount, DeliveryMethod.Reliable);
+            }
+        }
+
+
+        /// <summary>
+        /// Sends a message to a remote connection. Default channel = 0
+        /// </summary>
+        public void RegisterHosting()
         {
             OutgoingMessage regMessage = MessagePool.CreateMessage();
             IPAddress local = NetUtilities.GetLocalAddress();
 
-            regMessage.Write(NATMessageType.INITIATE_HOST);            
-            regMessage.Write(new IPEndPoint(local, port));
+            regMessage.Write(NATMessageType.INITIATE_HOST);                
             regMessage.WriteString("hello");
 
             fixed (byte* bytes = regMessage.Data)
@@ -69,15 +109,13 @@ namespace MicroNet.Network.NAT
         /// <summary>
         /// Sends a message to a remote connection
         /// </summary>
-        public void RequestIntroduction(uint hostId, ushort port)
+        public void RequestIntroduction(NATHostInfo info)
         {
             OutgoingMessage request = MessagePool.CreateMessage();
-            IPAddress local = NetUtilities.GetLocalAddress();
-
+          //  IPAddress local = NetUtilities.GetLocalAddress();
             request.Write(NATMessageType.REQUEST_INTRODUCTION);
-            request.Write(new IPEndPoint(local, port));
-            request.Write(hostId);
-            request.WriteString("hello");
+            request.Write(info.HostId);
+
 
             fixed (byte* bytes = request.Data)
             {
@@ -98,6 +136,18 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
             }
+        }
+
+        public void Connect()
+        {
+
+            ENet.Address remoteAddr = new ENet.Address()
+            {
+                Host = (uint)endPoint.Address.Address,
+                Port = remoteAddr.Port = (ushort)endPoint.Port
+            };
+
+            Peer = ENet.Connect(Host, ref remoteAddr, (IntPtr)1);
         }
 
         ///<summary>

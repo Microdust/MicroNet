@@ -17,11 +17,13 @@ namespace MicroNet.Network
 
         public const int INTRODUCTION = 128;
 
-        public const int GET_HOST_LIST = 256;
+  //      public const int GET_HOST_LIST = 256;
 
         public const int NAT_PUNCHTHROUGH = 512;
 
         public const int NAT_PUNCH_SUCCESS = 1024;
+
+        public const int REQUEST_HOST_LIST = 2048;
 
     }
 }
