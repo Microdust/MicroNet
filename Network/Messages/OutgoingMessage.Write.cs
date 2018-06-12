@@ -33,7 +33,7 @@ namespace MicroNet.Network
             }
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             
-            CheckAndBalance(BitLength + 8 + (bytes.Length * 8));
+            CheckAndBalance(8 + (bytes.Length * 8));
             WriteUInt16((ushort)bytes.Length);
 
             int bytesToSend = bytes.Length;

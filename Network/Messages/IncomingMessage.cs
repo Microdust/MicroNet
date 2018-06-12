@@ -22,6 +22,7 @@ namespace MicroNet.Network
             BitLocation = 0;
             BitLength = 0;
             Remote = null;
+            Recycle();
         }
         
     }
