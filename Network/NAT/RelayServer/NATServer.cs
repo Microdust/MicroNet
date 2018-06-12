@@ -111,10 +111,9 @@ namespace MicroNet.Network.NAT
             listMsg.Write(NATMessageType.REQUEST_HOST_LIST);
             listMsg.Write(registeredHosts.Count);
 
-            for (int i = 0; i < registeredHosts.Count; i++)
+            foreach(NATHost item in registeredHosts.Values)
             {
-                ulong index = (ulong)i;
-                registeredHosts[index].Info.WriteMessage(listMsg);
+                item.Info.WriteMessage(listMsg);
             }
 
             remote.Send(listMsg);

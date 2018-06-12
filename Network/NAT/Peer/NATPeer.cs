@@ -104,8 +104,7 @@ namespace MicroNet.Network.NAT
             {
                 NATHostInfo hostInfo = new NATHostInfo();
 
-                hostInfo.HostId = msg.ReadUInt64();
-                hostInfo.Title = msg.ReadString();
+                hostInfo.ReadMessage(msg);
 
                 hosts.Add(hostInfo);
                 Debug.Log(hostInfo.HostId.ToString(), " , ", hostInfo.Title);
