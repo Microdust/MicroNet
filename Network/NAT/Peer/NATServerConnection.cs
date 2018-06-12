@@ -121,6 +121,7 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
             }
+
         }
 
         /// <summary>
@@ -129,7 +130,6 @@ namespace MicroNet.Network.NAT
         public void InformPunchthroughSuccess()
         {
             OutgoingMessage request = MessagePool.CreateMessage();
-            IPAddress local = NetUtilities.GetLocalAddress();
             request.Write(NATMessageType.NAT_PUNCH_SUCCESS);
 
             fixed (byte* bytes = request.Data)
