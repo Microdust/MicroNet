@@ -238,6 +238,7 @@ namespace MicroNet.Network
         public abstract void OnReceived(IncomingMessage msg);
         public abstract void OnReady();
         public abstract void OnStop();
+        public abstract void OnConnectionFailure();
 
         public IncomingMessage ReadMessage()
         {
@@ -256,7 +257,12 @@ namespace MicroNet.Network
                 break;
 
                 case EventMessage.Disconnect:
-                OnDisconnect(msg.Remote);
+                    if(msg.Remote == null)
+                    {
+                        OnConnectionFailure();
+                        return;
+                    }                       
+                    OnDisconnect(msg.Remote);
                 break;
 
                 case EventMessage.Receive:
@@ -298,7 +304,7 @@ namespace MicroNet.Network
                         {
                             internalMsg = GetIncomingMessage();
 
-                            internalMsg.Remote = remotes[evt.peer->incomingPeerID] = GetRemoteConnection(evt.peer);
+                            internalMsg.Remote = remotes[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
                                            
                             internalMsg.Event = evt.type;
                            

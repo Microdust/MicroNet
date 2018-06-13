@@ -60,6 +60,11 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Stopping...");
         }
 
+        public override void OnConnectionFailure()
+        {
+            Debug.Log(config.Name, ": OnConnectionFailure");
+        }
+
 
         public void HandleHostSetup(IncomingMessage msg)
         {

@@ -20,14 +20,13 @@ namespace MicroNet.Network
             EndPoint.Port = Peer->address.Port;
         }
 
-        public RemoteConnection()
-        { }
-
         internal RemoteConnection(ENet.Peer* peer)
         {
             Peer = peer;
             EndPoint = new IPEndPoint(Peer->address.Host, Peer->address.Port);
         }
+
+        internal RemoteConnection() { }
 
         public uint ConnectionId
         {

@@ -9,16 +9,14 @@ namespace MicroNet.Network
     public static class MessagePool
     {
         private static Stack<OutgoingMessage> messagePool;
+        private static OutgoingMessage[] pool;
+        private static OutgoingMessage returnRemote;
 
+        private static int size;
 
         public static void InitializOutgoingPool(int capacity, int bufferSize)
         {
-            messagePool = new Stack<OutgoingMessage>(capacity);
-
-            for (int i = 0; i < capacity; i++)
-            {
-                messagePool.Push(new OutgoingMessage(bufferSize));
-            }
+ // need to change pos
         }
 
         public static void Recycle(OutgoingMessage msg)

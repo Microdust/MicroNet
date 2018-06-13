@@ -66,6 +66,11 @@ namespace MicroNet.Network
         public int IncomingBufferSize = 64;
 
         /// <summary>
+        /// Maximum tranimission unit (MTU). To support every router keep it at its default value = 1400
+        /// </summary>
+        public int MaximumTransmissionUnit = 1400;
+
+        /// <summary>
         /// The allocated size of the outgoing message buffer. If the buffer size exceeds it will resize the array which is performance-heavy.
         /// </summary>
         public int OutgoingBufferSize = 64;

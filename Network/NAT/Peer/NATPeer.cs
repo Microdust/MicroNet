@@ -114,5 +114,10 @@ namespace MicroNet.Network.NAT
             relayServer.RequestIntroduction(hosts[0].HostId);
 
         }
+
+        public override void OnConnectionFailure()
+        {
+            Debug.Log(config.Name, ": OnConnectionFailure");
+        }
     }
 }

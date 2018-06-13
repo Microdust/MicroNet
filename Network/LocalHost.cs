@@ -55,5 +55,10 @@ namespace MicroNet.Network
             MessagePool.Recycle(outgoing);
 
         }
+
+        public override void OnConnectionFailure()
+        {
+            Debug.Log(config.Name, ": OnConnectionFailure");
+        }
     }
 }

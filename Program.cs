@@ -78,7 +78,7 @@ namespace MicroNet
                 Name = "NATClient",
                 Timeout = 1,
                 NetworkRate = 50,
-                ServerEndPoint = new IPEndPoint(new IPAddress(myHost), 5000)
+                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
             });
 
             host.Start();
@@ -96,13 +96,13 @@ namespace MicroNet
         {
             NATPeer host = new NATPeer(new NetConfiguration(5001)
             {
-                Port = 5000,
+                Port = 5555,
                 AllowConnectors = true,
                 MaxConnections = 5,
                 Name = "NATHost",
                 Timeout = 1,
                 NetworkRate = 50,
-                ServerEndPoint = new IPEndPoint(new IPAddress(myHost), 5000)
+                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
             });
 
             host.Start();
@@ -150,7 +150,7 @@ namespace MicroNet
             server.Join();
             */
 
-            
+            /*
                bool isRunning = true;
 
 
@@ -182,8 +182,9 @@ namespace MicroNet
                        Console.WriteLine("Wrong key input, please try again...");
                    }
                }
+               */
    
-      /*
+      
             var server = new Thread(NATServer);
             server.Start();
             Thread.Sleep(100);
@@ -193,13 +194,15 @@ namespace MicroNet
             clients[0] = new Thread(NATHost);
             clients[0].Start();
 
-            Thread.Sleep(500);
+            
+            Thread.Sleep(250);
 
             clients[1] = new Thread(NATClient);
             clients[1].Start();
 
             server.Join();
-            */
+            
+            
 
 
 
