@@ -19,8 +19,7 @@ namespace MicroNet.Network
         private Thread networkThread;
         private bool isRunning;
         private ENet.Host* host;
-
-        private RemoteConnection[] remotes;
+        private RemoteConnection[] connections;
 
         private IncomingMessage msg;
 
@@ -37,9 +36,14 @@ namespace MicroNet.Network
             
         }
 
-        public NATServerConnection GetNATServerConnection()
+        public NATServerConnection CreateNATServerConnection()
         {
             return new NATServerConnection(host, config.ServerEndPoint);
+        }
+
+        public void Restart()
+        {
+            isRunning = false;
         }
 
         public void Start()
@@ -59,7 +63,7 @@ namespace MicroNet.Network
             InitializePools();
             InitializeQueues(config.IncomingBufferSize);           
 
-            remotes = new RemoteConnection[config.MaxConnections];
+            connections = new RemoteConnection[config.MaxConnections];
 
             if (config.AllowConnectors)
             {
@@ -82,8 +86,6 @@ namespace MicroNet.Network
                 return;
             }
 
-
-
             IncomingMessage readyEvent = GetIncomingMessage();
             readyEvent.Event = EventMessage.NetworkReady;
             IncomingEnqueue(readyEvent);
@@ -91,6 +93,7 @@ namespace MicroNet.Network
             isRunning = true;
         }
 
+        #region Connection Methods
         /// <summary>
         /// Request to connect to a remote host at specified address and port.
         /// </summary>
@@ -121,8 +124,29 @@ namespace MicroNet.Network
             ENet.Connect(host, ref remoteAddr, (IntPtr)config.DefaultChannelAmount);
         }
 
+        public void Disconnect(uint connectionId, uint flag)
+        {
+            if (connectionId > connections.Length)
+            {
+                Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
+                return;
+            }
 
+            ENet.DisconnectPeer(connections[connectionId].Peer, flag);
+        }
 
+        public void Disconnect(uint connectionId)
+        {
+            if (connectionId > connections.Length)
+            {
+                Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
+                return;
+            }
+
+            ENet.DisconnectPeer(connections[connectionId].Peer, 0);
+        }
+        #endregion
+        #region Send Methods
         /// <summary>
         /// Queues a packet to be sent to all peers associated with the host.
         /// </summary>
@@ -152,7 +176,7 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(remotes[connectionId].Peer, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(connections[connectionId].Peer, channelId, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
 
@@ -163,9 +187,38 @@ namespace MicroNet.Network
         {
             fixed (byte* bytes = msg.Data)
             {
-                ENet.MicroSend(remotes[connectionId].Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                ENet.MicroSend(connections[connectionId].Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
             }
         }
+
+        /// <summary>
+        /// Send a message to a collection of remotes
+        /// </summary>
+        public void Send(OutgoingMessage msg, IList<RemoteConnection> remotes)
+        {
+            fixed (byte* bytes = msg.Data)
+            {
+                for(int i = remotes.Count; i == 0; i++)
+                {
+                    ENet.MicroSend(remotes[i].Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Send a message to a collection of remotes
+        /// </summary>
+        public void Send(OutgoingMessage msg, IList<int> connectionIds)
+        {
+            fixed (byte* bytes = msg.Data)
+            {
+                for (int i = connectionIds.Count; i == 0; i++)
+                {
+                    ENet.MicroSend(connections[i].Peer, 0, bytes, (IntPtr)msg.ByteCount, msg.DeliveryMethod);
+                }
+            }
+        }
+        #endregion
 
 
         internal void NATPunching(IPEndPoint addr)
@@ -209,28 +262,6 @@ namespace MicroNet.Network
             }
             */
 
-        }
-
-        public void Disconnect(uint connectionId, uint flag)
-        {
-            if (connectionId > remotes.Length)
-            {
-                Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
-                return;
-            }
-
-            ENet.DisconnectPeer(remotes[connectionId].Peer, flag);
-        }
-
-        public void Disconnect(uint connectionId)
-        {
-            if (connectionId > remotes.Length)
-            {
-                Debug.Error(config.Name, ": Disconnect Id: ", connectionId.ToString(), " -- Out of connection array bounds");
-                return;
-            }
-
-            ENet.DisconnectPeer(remotes[connectionId].Peer, 0);
         }
 
         public abstract void OnConnect(RemoteConnection remote);
@@ -304,8 +335,7 @@ namespace MicroNet.Network
                         {
                             internalMsg = GetIncomingMessage();
 
-                            internalMsg.Remote = remotes[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
-                                           
+                            internalMsg.Remote = connections[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
                             internalMsg.Event = evt.type;
                            
                             IncomingEnqueue(internalMsg);
@@ -318,7 +348,7 @@ namespace MicroNet.Network
                             internalMsg = GetIncomingMessage();
 
                             internalMsg.Event = evt.type;
-                            internalMsg.Remote = remotes[evt.peer->incomingPeerID];
+                            internalMsg.Remote = connections[evt.peer->incomingPeerID];
 
                             IncomingEnqueue(internalMsg);
 
@@ -332,7 +362,7 @@ namespace MicroNet.Network
                             internalMsg.Type = evt.data;
                             internalMsg.Event = evt.type;
 
-                            internalMsg.Remote = remotes[evt.peer->incomingPeerID];
+                            internalMsg.Remote = connections[evt.peer->incomingPeerID];
 
                             int length = (int)evt.packet->dataLength;
 
@@ -355,12 +385,11 @@ namespace MicroNet.Network
             }
 
             ENet.DestroyHost(host);
-            remotes = null;
+            connections = null;
             host = null;
 
             IncomingMessage stoppedEvent = GetIncomingMessage();
             stoppedEvent.Event = EventMessage.NetworkStopped;
-
             IncomingEnqueue(stoppedEvent);
 
         }   

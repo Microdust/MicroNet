@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{19672F55-2F4D-4459-9A26-C8B26336C2EE}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>MicroNet</RootNamespace>
     <AssemblyName>MicroNet</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>

@@ -11,43 +11,102 @@ namespace MicroNet.Network
     public unsafe class RemoteConnection
     {
         internal ENet.Peer* Peer;
-        internal IPEndPoint EndPoint = new IPEndPoint(0, 0);
+        internal IPEndPoint internalEndPoint = new IPEndPoint(0, 0);
 
         internal void Initialize(ENet.Peer* peer)
         {
             Peer = peer;
-            EndPoint.Address.Address = Peer->address.Host;
-            EndPoint.Port = Peer->address.Port;
+            internalEndPoint.Address.Address = Peer->address.Host;
+            internalEndPoint.Port = Peer->address.Port;
         }
 
         internal RemoteConnection(ENet.Peer* peer)
         {
             Peer = peer;
-            EndPoint = new IPEndPoint(Peer->address.Host, Peer->address.Port);
+            internalEndPoint = new IPEndPoint(Peer->address.Host, Peer->address.Port);
         }
 
         internal RemoteConnection() { }
 
+
+        /// <summary>
+        /// Returns the id of the connection
+        /// </summary>
         public uint ConnectionId
         {
             get { return Peer->incomingPeerID; }
         }
 
         /// <summary>
-        /// Returns the IP address of the remote connection
+        /// Returns the ping interval (one-way) in milliseconds
         /// </summary>
-        public IPEndPoint IpEndPoint
+        public uint PingInterval
         {
-            get { return EndPoint; }
+            get { return Peer->pingInterval; }
         }
 
+        /// <summary>
+        /// Returns the IP address of the remote connection
+        /// </summary>
+        public IPEndPoint EndPoint
+        {
+            get { return internalEndPoint; }
+        }
 
         /// <summary>
-        /// Returns the round trip time for the remote connection
+        /// Returns the downstream bandwidth of the remote connection in bytes per second
+        /// </summary>
+        public uint BandwidthDownstream
+        {
+            get { return Peer->incomingBandwidth; }
+        }
+
+        /// <summary>
+        /// Returns the upstream bandwidth of the remote connection in bytes per second
+        /// </summary>
+        public uint BandwidthUpstream
+        {
+            get { return Peer->outgoingBandwidth; }
+        }
+
+        /// <summary>
+        /// Returns the total downstream bandwidth in bytes of the remote connection 
+        /// </summary>
+        public uint BandwidthTotalDownstream
+        {
+            get { return Peer->incomingDataTotal; }
+        }
+
+        /// <summary>
+        /// Returns the total upstream bandwidth in bytes of this remote connection 
+        /// </summary>
+        public uint BandwidthTotalUpstream
+        {
+            get { return Peer->outgoingDataTotal; }
+        }
+
+        /// <summary>
+        /// Returns the round trip time (RTT), measured in milliseconds
         /// </summary>
         public uint RTT
         {
             get { return Peer->roundTripTime; }
+        }
+
+        /// <summary>
+        /// Returns the lowest round trip time (RTT), measured in milliseconds
+        /// </summary>
+        public uint RTTLowest
+        {
+            get { return Peer->lowestRoundTripTime; }
+        }
+
+        /// <summary>
+        /// Returns the total amount of packets lost
+        /// </summary>
+        public uint TotalPacketsLost
+        {
+            get { return Peer->packetsLost; }
         }
 
         /// <summary>
@@ -56,6 +115,22 @@ namespace MicroNet.Network
         public uint TimeSinceLastMessage
         {
             get { return Peer->lastSendTime; }
+        }
+
+        /// <summary>
+        /// Returns the maximum transmission unit (MTU)
+        /// </summary>
+        public uint MTU
+        {
+            get { return Peer->mtu; }
+        }
+
+        /// <summary>
+        /// Returns the amount of available channels
+        /// </summary>
+        public uint ChannelCount
+        {
+            get { return (uint)Peer->channelcount; }
         }
 
         /// <summary>
@@ -89,17 +164,41 @@ namespace MicroNet.Network
         }
 
         ///<summary>
+        /// Disconnects from a remote connection with an id message
+        /// </summary>
+        public void Disconnect(uint id)
+        {
+            ENet.DisconnectPeer(Peer, id);
+        }
+
+        ///<summary>
         /// Disconnects from a remote connection
         /// </summary>
         public void Disconnect()
         {
-            ENet.DisconnectPeer(Peer, 1337);
+            ENet.DisconnectPeer(Peer, 0);
         }
 
         ///<summary>
-        /// Resets the connection without sending any disconnect events
+        /// Disconnects from a remote connection unreliably
         /// </summary>
-        public void Reset()
+        public void DisconnectForcefully()
+        {
+            ENet.DisconnectPeerNow(Peer, 0);
+        }
+
+        ///<summary>
+        /// Disconnects from a remote connection unreliably with an id message
+        /// </summary>
+        public void DisconnectForcefully(uint id)
+        {
+            ENet.DisconnectPeerNow(Peer, id);
+        }
+
+        ///<summary>
+        /// Resets the connection without sending any disconnect events. This will cause a timeout event
+        /// </summary>
+        internal void Reset()
         {
             ENet.ResetPeer(Peer);
         }

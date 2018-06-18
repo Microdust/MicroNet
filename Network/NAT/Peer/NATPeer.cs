@@ -44,7 +44,7 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Connecting to NAT relay server...");
 
 
-            relayServer = GetNATServerConnection();
+            relayServer = CreateNATServerConnection();
             relayServer.Connect();
 
         }

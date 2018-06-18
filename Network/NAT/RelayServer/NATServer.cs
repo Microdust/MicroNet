@@ -80,6 +80,9 @@ namespace MicroNet.Network.NAT
             OutgoingMessage ackMsg = MessagePool.CreateMessage();
             ackMsg.Write(NATMessageType.ACK);
             msg.Remote.Send(ackMsg);
+
+
+            MessagePool.Recycle(ackMsg);
         }
 
         public void HandleIntroductionRequest(IncomingMessage msg)
@@ -127,6 +130,8 @@ namespace MicroNet.Network.NAT
        
 
             remote.Send(listMsg);
+
+            MessagePool.Recycle(listMsg);
 
         }
 

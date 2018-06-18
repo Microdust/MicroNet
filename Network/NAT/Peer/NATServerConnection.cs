@@ -86,6 +86,8 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)regMessage.ByteCount, DeliveryMethod.Reliable);
             }
+
+            MessagePool.Recycle(regMessage);
         }
 
 
@@ -104,6 +106,8 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)regMessage.ByteCount, DeliveryMethod.Reliable);
             }
+
+            MessagePool.Recycle(regMessage);
         }
 
         /// <summary>
@@ -121,7 +125,7 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
             }
-
+            MessagePool.Recycle(request);
         }
 
         /// <summary>
@@ -136,6 +140,8 @@ namespace MicroNet.Network.NAT
             {
                 ENet.MicroSend(Peer, 0, bytes, (IntPtr)request.ByteCount, DeliveryMethod.Reliable);
             }
+
+            MessagePool.Recycle(request);
         }
 
         public void Connect()

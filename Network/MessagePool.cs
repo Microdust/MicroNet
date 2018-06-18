@@ -8,26 +8,46 @@ namespace MicroNet.Network
 {
     public static class MessagePool
     {
-        private static Stack<OutgoingMessage> messagePool;
         private static OutgoingMessage[] pool;
-        private static OutgoingMessage returnRemote;
-
         private static int size;
+        private static int defaultBufferSize;
 
-        public static void InitializOutgoingPool(int capacity, int bufferSize)
+        internal static void InitializOutgoingPool(int capacity, int bufferSize)
         {
- // need to change pos
-        }
+            size = capacity;
+            defaultBufferSize = bufferSize;
+            pool = new OutgoingMessage[capacity];
+           
+            for (int i = 0; i < capacity; i++)
+            {
+                pool[i] = new OutgoingMessage(bufferSize);
+            }
 
-        public static void Recycle(OutgoingMessage msg)
-        {
-            msg.Recycle();
-            messagePool.Push(msg);
         }
 
         public static OutgoingMessage CreateMessage()
         {
-            return messagePool.Pop();
+            if (size == 0)
+                return new OutgoingMessage(defaultBufferSize);
+
+            OutgoingMessage msg = pool[--size];
+            pool[size] = null;     // Free memory quicker.
+
+            return msg;
+        }
+
+        public static void Recycle(OutgoingMessage msg)
+        {
+            if (size == pool.Length)
+            {
+                OutgoingMessage[] newArray = new OutgoingMessage[2 * pool.Length];
+                Array.Copy(pool, 0, newArray, 0, size);
+                pool = newArray;
+            }
+
+            msg.Recycle();
+
+            pool[size++] = msg;
         }
 
 

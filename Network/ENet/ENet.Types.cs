@@ -34,8 +34,10 @@ namespace MicroNet.Network
             public ENetList* incomingUnreliableCommands;
         }
 
+     
         internal struct Compressor
         {
+            /*
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate void compress_cb(IntPtr context, IntPtr inBuffers, IntPtr inBufferCount, IntPtr inLimit, IntPtr outData, IntPtr outLimit);
 
@@ -47,8 +49,9 @@ namespace MicroNet.Network
 
             public IntPtr context;
             public IntPtr compress, decompress, destroy;
+            */
         }
-
+  
         [StructLayout(LayoutKind.Sequential)]
         internal struct Event
         {

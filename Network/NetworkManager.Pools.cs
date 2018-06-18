@@ -13,8 +13,6 @@ namespace MicroNet.Network
 
         // RemoteConnectionPool
         private RemoteConnection[] pool;
-        private RemoteConnection returnRemote;
-
         private int connectionPoolSize;          
 
         public void InitializePools()
@@ -36,6 +34,7 @@ namespace MicroNet.Network
                 pool[i] = new RemoteConnection();
             }
 
+           
         }
 
         internal RemoteConnection CreateRemoteConnection(ENet.Peer* peer)
@@ -58,6 +57,7 @@ namespace MicroNet.Network
                 RemoteConnection[] newArray = new RemoteConnection[2 * pool.Length];
                 Array.Copy(pool, 0, newArray, 0, connectionPoolSize);
                 pool = newArray;
+                Debug.Error(config.Name, ": NetworkManager.Pools - Recycled more remotes than space for!");
             }
 
             remote.Peer = null;

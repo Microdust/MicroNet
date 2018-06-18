@@ -194,14 +194,14 @@ namespace MicroNet
             clients[0] = new Thread(NATHost);
             clients[0].Start();
 
-            
+            /*
             Thread.Sleep(250);
 
             clients[1] = new Thread(NATClient);
             clients[1].Start();
 
             server.Join();
-            
+            */
             
 
 
