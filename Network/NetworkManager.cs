@@ -17,7 +17,9 @@ namespace MicroNet.Network
         public NetConfiguration config;
 
         private Thread networkThread;
-        private bool isRunning;
+        private bool isRunning = false;
+        private bool isPaused = false;
+
         private ENet.Host* host;
         private RemoteConnection[] connections;
 
@@ -41,20 +43,42 @@ namespace MicroNet.Network
             return new NATServerConnection(host, config.ServerEndPoint);
         }
 
-        public void Restart()
+        public void Start()
         {
+            if (networkThread.ThreadState == System.Threading.ThreadState.Unstarted)
+            networkThread.Start();
+        }
+
+        public void Pause()
+        {
+            isPaused = true;
             isRunning = false;
         }
 
-        public void Start()
+        public void Resume()
         {
-            networkThread.Start();
+            isRunning = true;
         }
 
         public void Stop()
         {
             isRunning = false;
+            isPaused = false;
         }
+
+        public void ModifyNetworkConfiguration(NetConfiguration config)
+        {
+            if(isRunning)
+            {
+                Debug.Error("Attempted to modify internal configuration while network is running. Pause first.");
+                return;
+            }
+
+            this.config = config;
+
+            Initialize();
+        }
+
 
         private void Initialize()
         {
@@ -322,77 +346,80 @@ namespace MicroNet.Network
             ENet.Event evt;
             IncomingMessage internalMsg;
 
-            
-        
-            while (isRunning)
+
+            while (networkThread.ThreadState == System.Threading.ThreadState.Background)
             {
-
-                if (ENet.Service(host, out evt, serviceWait) > 0)
+                while (isRunning)
                 {
-                    switch (evt.type)
+                    if (ENet.Service(host, out evt, serviceWait) > 0)
                     {
-                        case EventMessage.Connect:
+                        switch (evt.type)
                         {
-                            internalMsg = GetIncomingMessage();
+                            case EventMessage.Connect:
+                                {
+                                    internalMsg = GetIncomingMessage();
 
-                            internalMsg.Remote = connections[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
-                            internalMsg.Event = evt.type;
-                           
-                            IncomingEnqueue(internalMsg);
+                                    internalMsg.Remote = connections[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
+                                    internalMsg.Event = evt.type;
 
-                            connectionCount++;
-                            break;
-                        }
-                        case EventMessage.Disconnect:
-                        {
-                            internalMsg = GetIncomingMessage();
+                                    IncomingEnqueue(internalMsg);
 
-                            internalMsg.Event = evt.type;
-                            internalMsg.Remote = connections[evt.peer->incomingPeerID];
+                                    connectionCount++;
+                                    break;
+                                }
+                            case EventMessage.Disconnect:
+                                {
+                                    internalMsg = GetIncomingMessage();
 
-                            IncomingEnqueue(internalMsg);
+                                    internalMsg.Event = evt.type;
+                                    internalMsg.Remote = connections[evt.peer->incomingPeerID];
 
-                            connectionCount--;
-                            break;
-                        }
-                        case EventMessage.Receive:
-                        {
-                            internalMsg = GetIncomingMessage();
+                                    IncomingEnqueue(internalMsg);
 
-                            internalMsg.Type = evt.data;
-                            internalMsg.Event = evt.type;
+                                    connectionCount--;
+                                    break;
+                                }
+                            case EventMessage.Receive:
+                                {
+                                    internalMsg = GetIncomingMessage();
 
-                            internalMsg.Remote = connections[evt.peer->incomingPeerID];
+                                    internalMsg.Type = evt.data;
+                                    internalMsg.Event = evt.type;
 
-                            int length = (int)evt.packet->dataLength;
+                                    internalMsg.Remote = connections[evt.peer->incomingPeerID];
 
-                            if (length > internalMsg.Data.Length)
-                            {
-                                Debug.Log("Incoming Message array was too big, had to resize");
-                                internalMsg.Data = new byte[length];
-                            }
+                                    int length = (int)evt.packet->dataLength;
 
-                            Marshal.Copy(evt.packet->data, internalMsg.Data, 0, length);
+                                    if (length > internalMsg.Data.Length)
+                                    {
+                                        Debug.Log("Incoming Message array was too big, had to resize");
+                                        internalMsg.Data = new byte[length];
+                                    }
 
-                            IncomingEnqueue(internalMsg);
-                            break;
+                                    Marshal.Copy(evt.packet->data, internalMsg.Data, 0, length);
+
+                                    IncomingEnqueue(internalMsg);
+                                    break;
+                                }
+
                         }
 
                     }
-                
+                    Thread.Sleep(sleepTime);
                 }
-                Thread.Sleep(sleepTime);
+
+                if (host != null)
+                {
+                    ENet.DestroyHost(host);
+                    connections = null;
+                    host = null;
+
+                    IncomingMessage stoppedEvent = GetIncomingMessage();
+                    stoppedEvent.Event = EventMessage.NetworkStopped;
+                    IncomingEnqueue(stoppedEvent);
+                }
             }
-
-            ENet.DestroyHost(host);
-            connections = null;
-            host = null;
-
-            IncomingMessage stoppedEvent = GetIncomingMessage();
-            stoppedEvent.Event = EventMessage.NetworkStopped;
-            IncomingEnqueue(stoppedEvent);
-
-        }   
+        }
 
     }
 
