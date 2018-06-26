@@ -1,7 +1,6 @@
 ﻿using MicroNet.Network.NAT;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -18,7 +17,8 @@ namespace MicroNet.Network
 
         private Thread networkThread;
         private bool isRunning = false;
-        private bool isPaused = false;
+        private bool isConfigSet = false;
+        private bool isThreadAlive = false;
 
         private ENet.Host* host;
         private RemoteConnection[] connections;
@@ -45,14 +45,15 @@ namespace MicroNet.Network
 
         public void Start()
         {
-            if (networkThread.ThreadState == System.Threading.ThreadState.Unstarted)
-            networkThread.Start();
-        }
-
-        public void Pause()
-        {
-            isPaused = true;
-            isRunning = false;
+            if (networkThread.ThreadState == (ThreadState.Background | ThreadState.Unstarted))
+            {
+                isThreadAlive = true;
+                networkThread.Start();
+            }
+            else
+            {
+                Debug.Error("Attempted to start an already running or finished thread");
+            }
         }
 
         public void Resume()
@@ -60,23 +61,36 @@ namespace MicroNet.Network
             isRunning = true;
         }
 
-        public void Stop()
+        public void Pause()
         {
             isRunning = false;
-            isPaused = false;
         }
 
-        public void ModifyNetworkConfiguration(NetConfiguration config)
+        public void StopNetwork()
         {
-            if(isRunning)
+            isThreadAlive = false;
+            isRunning = false;
+        }
+
+        private void DestroyNetwork()
+        {
+            if (host != null)
             {
-                Debug.Error("Attempted to modify internal configuration while network is running. Pause first.");
-                return;
+                DisconnectAll();
+                ENet.DestroyHost(host);
+                connections = null;
+                host = null;
             }
+            IncomingMessage stoppedEvent = GetIncomingMessage();
+            stoppedEvent.Event = EventMessage.NetworkStopped;
+            IncomingEnqueue(stoppedEvent);
+        }
 
+        public void ModifyNetwork(NetConfiguration config)
+        {
             this.config = config;
-
-            Initialize();
+            isConfigSet = false;
+            isRunning = false;
         }
 
 
@@ -115,6 +129,24 @@ namespace MicroNet.Network
             IncomingEnqueue(readyEvent);
 
             isRunning = true;
+            isConfigSet = false;
+        }
+
+        internal void NATPunching(IPEndPoint addr)
+        {
+            ENet.Address address = new ENet.Address();
+            address.Port = (ushort)config.Port;
+            string strAddr = addr.Address.ToString();
+
+            if (ENet.AddressSetHost(ref address, Encoding.ASCII.GetBytes(strAddr)) != 0)
+            {
+                Debug.Log(config.Name, " Failed to resolve host name");
+            }
+
+            Debug.Log(config.Name, " Punching: ", addr.Address.ToString(), " : ", address.Port.ToString());
+
+            ENet.Connect(host, ref address, (IntPtr)config.DefaultChannelAmount);
+
         }
 
         #region Connection Methods
@@ -156,7 +188,7 @@ namespace MicroNet.Network
                 return;
             }
 
-            ENet.DisconnectPeer(connections[connectionId].Peer, flag);
+            ENet.DisconnectPeerNow(connections[connectionId].Peer, flag);
         }
 
         public void Disconnect(uint connectionId)
@@ -167,8 +199,20 @@ namespace MicroNet.Network
                 return;
             }
 
-            ENet.DisconnectPeer(connections[connectionId].Peer, 0);
+            ENet.DisconnectPeerNow(connections[connectionId].Peer, 0);
         }
+
+        public void DisconnectAll()
+        {
+            for (int i = 0; i < connections.Length; i++)
+            {
+                if (connections[i] != null)
+                ENet.DisconnectPeerNow(connections[i].Peer, 0);
+            }
+
+        }
+
+
         #endregion
         #region Send Methods
         /// <summary>
@@ -243,50 +287,7 @@ namespace MicroNet.Network
             }
         }
         #endregion
-
-
-        internal void NATPunching(IPEndPoint addr)
-        {
-            ENet.Address address = new ENet.Address();
-            address.Port = (ushort)config.Port;
-            string strAddr = addr.Address.ToString();
-
-            if (ENet.AddressSetHost(ref address, Encoding.ASCII.GetBytes(strAddr)) != 0)
-            {
-                Debug.Log(config.Name, " Failed to resolve host name");
-            }
-
-            Debug.Log(config.Name, " Punching: ", addr.Address.ToString(), " : ", address.Port.ToString());
-
-            ENet.Connect(host, ref address, (IntPtr)config.DefaultChannelAmount);
-            /*
-            fixed (byte* bytes = msg.Data)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    ENet.MicroSocketSend(host, ref address, bytes, (IntPtr)msg.ByteCount);
-                    Thread.Sleep(5);
-                }
-            }
-
-            if (!config.AllowConnectors)
-            {
-                ENet.Connect(host, ref address, (IntPtr)config.DefaultChannelAmount);
-            }
-            else
-            {
-                fixed (byte* bytes = msg.Data)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        ENet.MicroSocketSend(host, ref address, bytes, (IntPtr)msg.ByteCount);
-                        Thread.Sleep(5);
-                    }
-                }
-            }
-            */
-
-        }
+        #region Inheritance Methods
 
         public abstract void OnConnect(RemoteConnection remote);
         public abstract void OnDisconnect(RemoteConnection remote);
@@ -334,21 +335,32 @@ namespace MicroNet.Network
             }
 
             Recycle(msg);
-
         }
+#endregion
 
         private void Service()
         {
-            int sleepTime = 1000 / config.NetworkRate;
-            uint serviceWait = config.Timeout;
-            int connectionCount = 0;
-            Initialize();
             ENet.Event evt;
             IncomingMessage internalMsg;
+            int connectionCount = 0;
+            int sleepTime = 0;
+            uint serviceWait = 0;
 
-
-            while (networkThread.ThreadState == System.Threading.ThreadState.Background)
+            while (isThreadAlive)
             {
+                Debug.Log(config.Name);
+                if(!isConfigSet)
+                {
+                    if (host != null)
+                    {
+                        DestroyNetwork();
+                    }
+
+                    sleepTime = 1000 / config.NetworkRate;
+                    serviceWait = config.Timeout;                   
+                    Initialize();
+                }
+
                 while (isRunning)
                 {
                     if (ENet.Service(host, out evt, serviceWait) > 0)
@@ -356,71 +368,62 @@ namespace MicroNet.Network
                         switch (evt.type)
                         {
                             case EventMessage.Connect:
-                                {
-                                    internalMsg = GetIncomingMessage();
+                            {
+                                internalMsg = GetIncomingMessage();
 
-                                    internalMsg.Remote = connections[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
-                                    internalMsg.Event = evt.type;
+                                internalMsg.Remote = connections[evt.peer->incomingPeerID] = CreateRemoteConnection(evt.peer);
+                                internalMsg.Event = evt.type;
 
-                                    IncomingEnqueue(internalMsg);
+                                IncomingEnqueue(internalMsg);
 
-                                    connectionCount++;
-                                    break;
-                                }
+                                connectionCount++;
+                                break;
+                            }
                             case EventMessage.Disconnect:
-                                {
-                                    internalMsg = GetIncomingMessage();
+                            {
+                                internalMsg = GetIncomingMessage();
 
-                                    internalMsg.Event = evt.type;
-                                    internalMsg.Remote = connections[evt.peer->incomingPeerID];
+                                internalMsg.Event = evt.type;
+                                internalMsg.Remote = connections[evt.peer->incomingPeerID];
 
-                                    IncomingEnqueue(internalMsg);
+                                IncomingEnqueue(internalMsg);
 
-                                    connectionCount--;
-                                    break;
-                                }
+                                connectionCount--;
+                                break;
+                            }
                             case EventMessage.Receive:
+                            {
+                                internalMsg = GetIncomingMessage();
+
+                                internalMsg.Type = evt.data;
+                                internalMsg.Event = evt.type;
+
+                                internalMsg.Remote = connections[evt.peer->incomingPeerID];
+
+                                int length = (int)evt.packet->dataLength;
+
+                                if (length > internalMsg.Data.Length)
                                 {
-                                    internalMsg = GetIncomingMessage();
-
-                                    internalMsg.Type = evt.data;
-                                    internalMsg.Event = evt.type;
-
-                                    internalMsg.Remote = connections[evt.peer->incomingPeerID];
-
-                                    int length = (int)evt.packet->dataLength;
-
-                                    if (length > internalMsg.Data.Length)
-                                    {
-                                        Debug.Log("Incoming Message array was too big, had to resize");
-                                        internalMsg.Data = new byte[length];
-                                    }
-
-                                    Marshal.Copy(evt.packet->data, internalMsg.Data, 0, length);
-
-                                    IncomingEnqueue(internalMsg);
-                                    break;
+                                    Debug.Log("Incoming Message array was too big, had to resize");
+                                    internalMsg.Data = new byte[length];
                                 }
 
+                                Marshal.Copy(evt.packet->data, internalMsg.Data, 0, length);
+
+                                IncomingEnqueue(internalMsg);
+                                break;
+                            }
                         }
 
                     }
                     Thread.Sleep(sleepTime);
                 }
 
-                if (host != null)
-                {
-                    ENet.DestroyHost(host);
-                    connections = null;
-                    host = null;
-
-                    IncomingMessage stoppedEvent = GetIncomingMessage();
-                    stoppedEvent.Event = EventMessage.NetworkStopped;
-                    IncomingEnqueue(stoppedEvent);
-                }
             }
-        }
 
+            DestroyNetwork();
+        }
+     
     }
 
 

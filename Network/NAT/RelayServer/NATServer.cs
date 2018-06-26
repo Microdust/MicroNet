@@ -73,7 +73,8 @@ namespace MicroNet.Network.NAT
             Debug.Log(config.Name, ": Adding host as id: ", natHost.Info.HostId.ToString());
 
             // -- Why would it add them twice? -- //
-            registeredHosts.Add(natHost.Info.HostId, natHost);
+    //        registeredHosts.Add(natHost.Info.HostId, natHost);
+            registeredHosts[natHost.Info.HostId] = natHost;
 
             Debug.Log(config.Name, ": Host registered at: External IP: ", natHost.Remote.EndPoint.ToString());
 

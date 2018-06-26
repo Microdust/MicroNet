@@ -15,25 +15,8 @@ namespace MicroGodotNet
         private static int movementSequence = 0;
 
 
-        public static void ProcessInput()
-        {
-            Vector2 moveInput = GetInput();
 
-            if (moveInput == Vector2.Zero)
-                return;
-
-            Movement movement = new Movement()
-            {
-                Input = moveInput,
-                Sequence = movementSequence++
-            };
-
-
-
-        }
-
-
-        private static Vector2 GetInput()
+        public static Vector2 GetInput()
         {
             Vector2 move = new Vector2();
 

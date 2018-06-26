@@ -75,7 +75,24 @@ namespace MicroNet.Network.NAT
 
         public void HandleAck(IncomingMessage msg)
         {
-            Debug.Log(config.Name, ": Received acknowledgement from master server. Listed for NAT punchthrough...");
+             byte[] localHost = { 127, 0, 0, 1 };
+
+        Debug.Log(config.Name, ": Received acknowledgement from master server. Listed for NAT punchthrough...");
+
+            StopNetwork();
+            /*
+
+            ModifyNetwork(new NetConfiguration(5001)
+            {
+                Port = 5555,
+                AllowConnectors = true,
+                MaxConnections = 5,
+                Name = "NATHost",
+                Timeout = 1,
+                NetworkRate = 50,
+                ServerEndPoint = new IPEndPoint(new IPAddress(localHost), 5000)
+            });
+            */
         }
 
         /// <summary>

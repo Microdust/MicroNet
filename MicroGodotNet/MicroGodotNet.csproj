@@ -51,7 +51,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="MicroNet">
-      <HintPath>..\..\Desktop\MicroNet.dll</HintPath>
+      <HintPath>..\..\..\Desktop\MicroNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

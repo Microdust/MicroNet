@@ -76,6 +76,7 @@ namespace MicroGodotNet
             {
                 case MessageTypes.Move:
                 SignalManager.Signal(Movement.Read(msg));
+                
                 break;
                 case MessageTypes.WorldState:
                 break;

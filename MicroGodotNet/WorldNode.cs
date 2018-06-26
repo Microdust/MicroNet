@@ -1,6 +1,7 @@
 ﻿using Godot;
 using MicroGodotNet.Messages;
 using MicroGodotNet.Signal;
+using MicroNet.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,10 +19,10 @@ namespace MicroGodotNet
         {
             SignalManager.Subscribe<Spawn>(this);
             SignalManager.Subscribe<NetworkPlayer>(this);
+            SignalManager.Subscribe<Movement>(this);
 
-        
+
         }
-
 
         public void Execute(NetworkPlayer message)
         {
@@ -35,6 +36,16 @@ namespace MicroGodotNet
 
             network.Tick();
 
+            Vector2 input = InputManager.GetInput();
+            if (input == Vector2.Zero)
+                return;
+
+            OutgoingMessage msg = MessagePool.CreateMessage();
+
+            new Movement().Write(msg);
+
+            network.Broadcast(msg);
+
         }
 
         public void Execute(Spawn message)
@@ -44,6 +55,11 @@ namespace MicroGodotNet
             players.Add(player);
 
             AddChild(player);
+        }
+
+        public void MoveUnit(Movement movement)
+        {
+
         }
 
 
